@@ -1,4 +1,4 @@
-package com.Skillbox.AndrewBlog.api.request;
+package com.skillbox.AndrewBlog.api.request;
 
 public class TagRequest {
 

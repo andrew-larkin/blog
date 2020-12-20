@@ -1,16 +1,14 @@
-package com.Skillbox.AndrewBlog.service;
+package com.skillbox.AndrewBlog.service;
 
-import com.Skillbox.AndrewBlog.api.response.SettingsResponse;
-import com.Skillbox.AndrewBlog.model.GlobalSettings;
-import com.Skillbox.AndrewBlog.repository.SettingsRepository;
+import com.skillbox.AndrewBlog.api.response.SettingsResponse;
+import com.skillbox.AndrewBlog.repository.SettingsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Service
-public class SettingsService implements SettingServiceInt {
+public class SettingsService {
 
     private SettingsRepository settingsRepository;
 
@@ -19,16 +17,12 @@ public class SettingsService implements SettingServiceInt {
         this.settingsRepository = settingsRepository;
     }
 
-    public SettingsResponse getGlobalSettings () {
+    public ResponseEntity<?> getApiSettings () {
 
-        SettingsResponse settingsResponse = new SettingsResponse();
-        Iterable<GlobalSettings> settings = settingsRepository.findAll();
-        List<GlobalSettings> list = new ArrayList<>();
-        settings.forEach(list::add);
-        settingsResponse.setMultiuserMode(list.get(0).getValue());
-        settingsResponse.setPostPremoderation(list.get(1).getValue());
-        settingsResponse.setStatisticIsPublic(list.get(2).getValue());
-
-        return settingsResponse;
+        return ResponseEntity.status(HttpStatus.OK).body(new SettingsResponse(
+                settingsRepository.getGlobalSettingsByName("MULTIUSER_MODE"),
+                settingsRepository.getGlobalSettingsByName("POST_PREMODERATION"),
+                settingsRepository.getGlobalSettingsByName("STATISTICS_IS_PUBLIC")
+        ));
     }
 }

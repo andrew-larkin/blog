@@ -1,4 +1,4 @@
-package com.Skillbox.AndrewBlog.api.response;
+package com.skillbox.AndrewBlog.api.response;
 
 public class CheckResponse {
 

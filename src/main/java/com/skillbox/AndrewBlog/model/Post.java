@@ -1,4 +1,4 @@
-package com.Skillbox.AndrewBlog.model;
+package com.skillbox.AndrewBlog.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
@@ -144,5 +144,5 @@ public class Post {
             joinColumns = @JoinColumn(name = "post_id"),
             inverseJoinColumns = @JoinColumn(name = "tag_id")
     )
-    private List<Tag> tags;
+    private List<com.Skillbox.AndrewBlog.model.Tag> tags;
 }

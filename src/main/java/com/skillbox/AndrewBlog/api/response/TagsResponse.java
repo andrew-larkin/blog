@@ -1,17 +1,18 @@
-package com.Skillbox.AndrewBlog.api.response;
-
-import java.util.ArrayList;
-import java.util.List;
+package com.skillbox.AndrewBlog.api.response;
 
 public class TagsResponse {
 
-    List<Tags> tags = new ArrayList<>();
+   private Object tags = new Object();
 
-    public List<Tags> getTags() {
+    public TagsResponse(Object tags) {
+        this.tags = tags;
+    }
+
+    public Object getTags() {
         return tags;
     }
 
-    public void setTags(List<Tags> tags) {
+    public void setTags(Object tags) {
         this.tags = tags;
     }
 }

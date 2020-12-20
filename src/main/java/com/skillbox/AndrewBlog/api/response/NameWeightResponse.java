@@ -1,9 +1,14 @@
-package com.Skillbox.AndrewBlog.api.response;
+package com.skillbox.AndrewBlog.api.response;
 
-public class Tags {
+public class NameWeightResponse {
 
     private String name;
     private double weight;
+
+    public NameWeightResponse(String name, double weight) {
+        this.name = name;
+        this.weight = weight;
+    }
 
     public String getName() {
         return name;

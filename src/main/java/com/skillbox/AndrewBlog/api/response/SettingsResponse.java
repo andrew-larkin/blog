@@ -1,4 +1,4 @@
-package com.Skillbox.AndrewBlog.api.response;
+package com.skillbox.AndrewBlog.api.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -12,6 +12,12 @@ public class SettingsResponse {
 
     @JsonProperty("STATISTIC_IS_PUBLIC")
     private String statisticIsPublic;
+
+    public SettingsResponse(String multiuserMode, String postPremoderation, String statisticIsPublic) {
+        this.multiuserMode = multiuserMode;
+        this.postPremoderation = postPremoderation;
+        this.statisticIsPublic = statisticIsPublic;
+    }
 
     public String getMultiuserMode() {
         return multiuserMode;

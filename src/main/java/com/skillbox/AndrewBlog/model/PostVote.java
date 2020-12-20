@@ -1,4 +1,4 @@
-package com.Skillbox.AndrewBlog.model;
+package com.skillbox.AndrewBlog.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 

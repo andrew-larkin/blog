@@ -1,31 +1,28 @@
-package com.Skillbox.AndrewBlog.service;
+package com.skillbox.AndrewBlog.service;
 
-import com.Skillbox.AndrewBlog.api.response.Tags;
-import com.Skillbox.AndrewBlog.api.response.TagsResponse;
-import com.Skillbox.AndrewBlog.model.Post;
-import com.Skillbox.AndrewBlog.model.Tag;
-import com.Skillbox.AndrewBlog.model.Tag2Post;
-import com.Skillbox.AndrewBlog.repository.PostRepository;
-import com.Skillbox.AndrewBlog.repository.Tag2PostRepository;
-import com.Skillbox.AndrewBlog.repository.TagsRepository;
+import com.skillbox.AndrewBlog.api.response.ErrorDescriptionResponse;
+import com.skillbox.AndrewBlog.api.response.NameWeightResponse;
+import com.skillbox.AndrewBlog.api.response.TagsResponse;
+import com.skillbox.AndrewBlog.model.Tag;
+import com.skillbox.AndrewBlog.repository.PostRepository;
+import com.skillbox.AndrewBlog.repository.Tag2PostRepository;
+import com.skillbox.AndrewBlog.repository.TagsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class TagsService implements TagsServiceInt {
+public class TagsService {
 
-    @Autowired
     private TagsRepository tagsRepository;
-
-    @Autowired
     private Tag2PostRepository tag2PostRepository;
-
-    @Autowired
     private PostRepository postRepository;
 
+    @Autowired
     public TagsService(TagsRepository tagsRepository, Tag2PostRepository tag2PostRepository,
                        PostRepository postRepository) {
         this.tagsRepository = tagsRepository;
@@ -33,77 +30,53 @@ public class TagsService implements TagsServiceInt {
         this.postRepository = postRepository;
     }
 
-    @Override
-    public TagsResponse getTags(String request) {
+    public ResponseEntity<?> getApiTag(String query) {
 
-        TagsResponse tagsResponse = new TagsResponse();
-        List<Tags> tagsList = new ArrayList<>();
+        StringBuilder errors = new StringBuilder();
+        getQueryCheck(query, errors);
 
-        Iterable<Tag> tagIterable = tagsRepository.findAll();
-        List<Tag> tagList = new ArrayList<>();
-        tagIterable.forEach(tagList::add);
-
-        Iterable<Tag2Post> tag2PostIterable = tag2PostRepository.findAll();
-        List<Tag2Post> tag2PostList = new ArrayList<>();
-        tag2PostIterable.forEach(tag2PostList::add);
-
-        Iterable<Post> postIterable = postRepository.findAll();
-        List<Post> postList = new ArrayList<>();
-        postIterable.forEach(postList::add);
-
-        int postAmount = postList.size();
-
-        for (Tag tag : tagList) {
-            Tags tags = new Tags();
-            double count = 0.0;
-            if (tag.getName().equals(request)) {
-                for (Tag2Post tag2Post : tag2PostList) {
-                    if (tag.getId() == tag2Post.getTagId()) {
-                        count++;
-                    }
-                }
-                tags.setName(tag.getName());
-                tags.setWeight(count / postAmount);
-                tagsList.add(tags);
-            }
+        if (!errors.toString().equals("")) {
+            return ResponseEntity.status(200).body(new ErrorDescriptionResponse(errors.toString().trim()));
         }
-        tagsResponse.setTags(tagsList);
-        return tagsResponse;
+
+        return ResponseEntity.status(HttpStatus.OK).body(new TagsResponse(
+                getNameWeightResponseList(query)
+        ));
+
     }
 
-    @Override
-    public TagsResponse getTags() {
-
-        TagsResponse tagsResponse = new TagsResponse(); //объект, возвращаемый методом
-        List<Tags> tagsList = new ArrayList<>(); //список
-
-        Iterable<Tag> tagIterable = tagsRepository.findAll();
-        List<Tag> tagList = new ArrayList<>();
-        tagIterable.forEach(tagList::add);
-
-        Iterable<Tag2Post> tag2PostIterable = tag2PostRepository.findAll();
-        List<Tag2Post> tag2PostList = new ArrayList<>();
-        tag2PostIterable.forEach(tag2PostList::add);
-
-        Iterable<Post> postIterable = postRepository.findAll();
-        List<Post> postList = new ArrayList<>();
-        postIterable.forEach(postList::add);
-
-        int postAmount = postList.size();
-
-        for (Tag tag : tagList) {
-            Tags tags = new Tags();
-            double count = 0.0;
-            for (Tag2Post tag2Post : tag2PostList) {
-                if (tag.getId() == tag2Post.getTagId()) {
-                    count++;
-                }
-            }
-            tags.setName(tag.getName());
-            tags.setWeight(count/postAmount);
-            tagsList.add(tags);
+    private List<NameWeightResponse> getNameWeightResponseList(String query) {
+        List<NameWeightResponse> nameWeightResponseList = new ArrayList<>();
+        List<Tag> tags;
+        if (query.isEmpty()) {
+            tags = tagsRepository.getAllTags();
+        } else {
+            tags = tagsRepository.getTagByName(query);
         }
-        tagsResponse.setTags(tagsList);
-        return tagsResponse;
+        for (Tag tag : tags) {
+            nameWeightResponseList.add(getNameWeightResponse(tag));
+        }
+        return nameWeightResponseList;
+    }
+
+    private NameWeightResponse getNameWeightResponse(Tag tag) {
+        return new NameWeightResponse(
+                tag.getName(),
+                (double) tag2PostRepository
+                        .getAmountOfTagByTagId(tag.getId())/postRepository.getAmountOfPosts()
+        );
+    }
+
+    private void getQueryCheck (String query, StringBuilder errors) {
+        List<Tag> tags = tagsRepository.getAllTags();
+        int count = 0;
+        for (Tag tag : tags) {
+            if (query.equals(tag.getName())) {
+                count++;
+            }
+        }
+        if (count == 0) {
+            errors.append("Tag ").append(query).append(" is not found.");
+        }
     }
 }

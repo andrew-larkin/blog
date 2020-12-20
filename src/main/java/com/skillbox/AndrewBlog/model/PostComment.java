@@ -1,6 +1,7 @@
-package com.Skillbox.AndrewBlog.model;
+package com.skillbox.AndrewBlog.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.skillbox.AndrewBlog.model.Post;
 
 import javax.persistence.*;
 import java.util.Date;

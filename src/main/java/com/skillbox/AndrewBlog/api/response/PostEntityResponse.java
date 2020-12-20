@@ -1,10 +1,10 @@
-package com.Skillbox.AndrewBlog.api.response;
+package com.skillbox.AndrewBlog.api.response;
 
-public class PostTempForResponse {
+public class PostEntityResponse {
 
-    private int id;
+    private long id;
     private long timestamp;
-    private UserForPostResponse user;
+    private IdNameResponse user;
     private String title;
     private String announce;
     private int likeCount;
@@ -12,14 +12,26 @@ public class PostTempForResponse {
     private int commentCount;
     private int viewCount;
 
-    public PostTempForResponse() {
+    public PostEntityResponse(long id, long timestamp, IdNameResponse user, String title, String announce, int likeCount, int dislikeCount, int commentCount, int viewCount) {
+        this.id = id;
+        this.timestamp = timestamp;
+        this.user = user;
+        this.title = title;
+        this.announce = announce;
+        this.likeCount = likeCount;
+        this.dislikeCount = dislikeCount;
+        this.commentCount = commentCount;
+        this.viewCount = viewCount;
     }
 
-    public int getId() {
+    public PostEntityResponse() {
+    }
+
+    public long getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(long id) {
         this.id = id;
     }
 
@@ -31,11 +43,11 @@ public class PostTempForResponse {
         this.timestamp = timestamp;
     }
 
-    public UserForPostResponse getUser() {
+    public IdNameResponse getUser() {
         return user;
     }
 
-    public void setUser(UserForPostResponse user) {
+    public void setUser(IdNameResponse user) {
         this.user = user;
     }
 
@@ -86,5 +98,4 @@ public class PostTempForResponse {
     public void setViewCount(int viewCount) {
         this.viewCount = viewCount;
     }
-
 }

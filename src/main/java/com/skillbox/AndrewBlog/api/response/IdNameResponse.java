@@ -1,11 +1,13 @@
-package com.Skillbox.AndrewBlog.api.response;
+package com.skillbox.AndrewBlog.api.response;
 
-public class UserForPostResponse {
+public class IdNameResponse {
 
     private int id;
     private String name;
 
-    public UserForPostResponse() {
+    public IdNameResponse(int id, String name) {
+        this.id = id;
+        this.name = name;
     }
 
     public int getId() {

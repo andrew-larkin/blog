@@ -1,11 +1,9 @@
-package com.Skillbox.AndrewBlog.controller;
+package com.skillbox.AndrewBlog.controller;
 
-import com.Skillbox.AndrewBlog.api.response.CheckResponse;
-import com.Skillbox.AndrewBlog.service.CheckService;
-import org.springframework.http.HttpStatus;
+import com.skillbox.AndrewBlog.service.CheckService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -13,15 +11,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequestMapping("/api/auth")
 public class ApiAuthController {
 
-    CheckService checkService = new CheckService();
+    private final CheckService checkService;
 
+    @Autowired
     public ApiAuthController(CheckService checkService) {
         this.checkService = checkService;
     }
 
     @GetMapping("/check")
-    public ResponseEntity<CheckResponse> apiAuth() {
-        final CheckResponse checkResponse = checkService.getCheck();
-        return new ResponseEntity<>(checkResponse, HttpStatus.OK);
+    public ResponseEntity<?> getApiAuthCheck() {
+        return checkService.getApiAuthCheck();
     }
 }

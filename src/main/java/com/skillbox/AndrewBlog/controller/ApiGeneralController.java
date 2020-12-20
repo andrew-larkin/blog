@@ -1,10 +1,10 @@
-package com.Skillbox.AndrewBlog.controller;
+package com.skillbox.AndrewBlog.controller;
 
-import com.Skillbox.AndrewBlog.api.response.InitResponse;
-import com.Skillbox.AndrewBlog.api.response.SettingsResponse;
-import com.Skillbox.AndrewBlog.api.response.TagsResponse;
-import com.Skillbox.AndrewBlog.service.SettingsService;
-import com.Skillbox.AndrewBlog.service.TagsService;
+import com.skillbox.AndrewBlog.api.response.InitResponse;
+import com.skillbox.AndrewBlog.api.response.TagsResponse;
+import com.skillbox.AndrewBlog.service.SettingsService;
+import com.skillbox.AndrewBlog.service.TagsService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,6 +20,7 @@ public class ApiGeneralController {
     private final TagsService tagsService;
     private final InitResponse initResponse;
 
+    @Autowired
     public ApiGeneralController(SettingsService settingsService, TagsService tagsService, InitResponse initResponse) {
         this.settingsService = settingsService;
         this.tagsService = tagsService;
@@ -27,24 +28,17 @@ public class ApiGeneralController {
     }
 
     @GetMapping("/settings")
-    private ResponseEntity<SettingsResponse> settings () {
-        final SettingsResponse globalSettings = settingsService.getGlobalSettings();
-        return new ResponseEntity<>(globalSettings, HttpStatus.OK);
+    private ResponseEntity<?> getApiSettings () {
+        return settingsService.getApiSettings();
     }
 
     @GetMapping("/init")
-    private InitResponse init() {
+    private InitResponse getApiInit() {
         return initResponse;
     }
 
     @GetMapping("/tag")
-    private ResponseEntity<TagsResponse> getTags(@RequestParam String request) {
-        final TagsResponse tagsResponse;
-        if (request == null || request.equals("")) {
-            tagsResponse = tagsService.getTags();
-        } else {
-            tagsResponse = tagsService.getTags(request);
-        }
-        return new ResponseEntity<>(tagsResponse, HttpStatus.OK);
+    private ResponseEntity<?> getApiTag(@RequestParam String query) {
+        return tagsService.getApiTag(query);
     }
 }
