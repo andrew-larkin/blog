@@ -60,6 +60,10 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH, CascadeType.REFRESH})
     private List<PostVote> postVotes;
 
+    public void setId(int id) {
+        this.id = id;
+    }
+
     public byte getIsModerator() {
         return isModerator;
     }

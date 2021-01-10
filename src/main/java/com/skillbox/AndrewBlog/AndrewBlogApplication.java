@@ -1,4 +1,4 @@
-package com.Skillbox.AndrewBlog;
+package com.skillbox.AndrewBlog;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

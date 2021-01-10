@@ -14,7 +14,7 @@ public interface TagsRepository extends CrudRepository<Tag, Integer> {
     @Query(value = "select * from tags", nativeQuery = true)
     List<Tag> getAllTags();
 
-    @Query(value = "select * from tags where name = :name")
+    @Query(value = "select * from tags where name = :name", nativeQuery = true)
     List<Tag> getTagByName(@Param("name") String name);
 
 }

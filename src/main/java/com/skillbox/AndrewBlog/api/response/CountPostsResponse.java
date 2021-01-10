@@ -1,16 +1,15 @@
 package com.skillbox.AndrewBlog.api.response;
 
+import java.util.List;
+
 public class CountPostsResponse {
 
     private int count;
-    private Object posts;
+    private List<PostEntityResponse> posts;
 
-    public CountPostsResponse(int count, Object posts) {
+    public CountPostsResponse(int count, List<PostEntityResponse> posts) {
         this.count = count;
         this.posts = posts;
-    }
-
-    public CountPostsResponse() {
     }
 
     public int getCount() {
@@ -21,8 +20,11 @@ public class CountPostsResponse {
         this.count = count;
     }
 
-    public Object getPosts() {
+    public List<PostEntityResponse> getPostEntityResponseList() {
         return posts;
     }
 
+    public void setPostEntityResponseList(List<PostEntityResponse> posts) {
+        this.posts = posts;
+    }
 }

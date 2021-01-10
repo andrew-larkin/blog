@@ -2,7 +2,7 @@ package com.skillbox.AndrewBlog.api.response;
 
 public class TagsResponse {
 
-   private Object tags = new Object();
+   private Object tags;
 
     public TagsResponse(Object tags) {
         this.tags = tags;

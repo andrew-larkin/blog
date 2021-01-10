@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface SettingsRepository extends CrudRepository<GlobalSettings, Integer> {
 
-    @Query(name = "select value from global_settings where name = :name")
+    @Query(name = "select value from global_settings where name = :name", nativeQuery = true)
     String getGlobalSettingsByName(@Param("name") String name);
 
 }

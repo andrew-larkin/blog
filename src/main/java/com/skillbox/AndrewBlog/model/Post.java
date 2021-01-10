@@ -144,5 +144,5 @@ public class Post {
             joinColumns = @JoinColumn(name = "post_id"),
             inverseJoinColumns = @JoinColumn(name = "tag_id")
     )
-    private List<com.Skillbox.AndrewBlog.model.Tag> tags;
+    private List<Tag> tags;
 }

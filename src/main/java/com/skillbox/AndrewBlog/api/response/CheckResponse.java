@@ -12,4 +12,10 @@ public class CheckResponse {
 
     private String result;
 
+    public CheckResponse(String result) {
+        this.result = result;
+    }
+
+    public CheckResponse() {
+    }
 }
