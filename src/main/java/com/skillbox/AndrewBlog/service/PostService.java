@@ -1,5 +1,8 @@
 package com.skillbox.AndrewBlog.service;
 
+import com.skillbox.AndrewBlog.api.request.CommentRequest;
+import com.skillbox.AndrewBlog.api.request.ModerationRequest;
+import com.skillbox.AndrewBlog.api.request.PostRequest;
 import com.skillbox.AndrewBlog.api.response.*;
 import com.skillbox.AndrewBlog.model.Post;
 import com.skillbox.AndrewBlog.model.PostComment;
@@ -124,7 +127,6 @@ public class PostService {
             errors.append("'limit' should be greater than 0. ");
         }
 
-
         if (date.length() != 10 || !date.contains("-")) {
             errors.append("'date' format should be 'yyyy-MM-dd'. ");
         }
@@ -139,11 +141,43 @@ public class PostService {
         }
 
         List<Post> postList = postRepository
-                .getPostsByTime(Integer.parseInt(dates[0]), Integer.parseInt(dates[1]), Integer.parseInt(dates[2]));
+                .getPostsByTime(Integer.parseInt(dates[0]), Integer.parseInt(dates[1]), Integer.parseInt(dates[2]),
+                        PageRequest.of(offset, limit));
 
         return ResponseEntity.status(200).body(new CountPostsResponse(
                 postList.size(),
                 getPostResponseListByPosts(postList)));
+    }
+
+    public ResponseEntity<?> getApiPostByTag(int offset, int limit, String tag) {
+
+        StringBuilder errors = new StringBuilder();
+        if (offset < 0) {
+            errors.append("'offset' should be equal or greater than 0. ");
+        }
+        if (limit <= 0) {
+            errors.append("'limit' should be equal or greater than 0. ");
+        }
+        if (tagsRepository.getTagByName(tag).isEmpty()) {
+            errors.append("defined 'tag' is not found. ");
+        }
+        if (!errors.toString().equals("")) {
+            return ResponseEntity.status(200).body(new ErrorDescriptionResponse(errors.toString().trim()));
+        }
+
+        List<Post> postList = postRepository.getPostsByTag(tag, PageRequest.of(offset, limit));
+
+        return ResponseEntity.status(200).body(new CountPostsResponse(
+                postList.size(),
+                getPostResponseListByPosts(postList)));
+    }
+
+    public ResponseEntity<?> getApiPostModeration(int offset, int limit, String status) {
+        return ResponseEntity.status(200).body("заглушка");
+    }
+
+    public ResponseEntity<?> getApiPostMy(int offset, int limit, String status) {
+        return ResponseEntity.status(200).body("заглушка");
     }
 
         /*public ResponseEntity<?> getApiPostId(int id) {
@@ -175,6 +209,30 @@ public class PostService {
                 getTagsByPost(optionalPost.get())
         ));
     }*/
+
+    public ResponseEntity<?> postApiPost(PostRequest postRequest) {
+        return ResponseEntity.status(200).body("заглушка");
+    }
+
+    public ResponseEntity<?> putApiPost(int id, PostRequest postRequest) {
+        return ResponseEntity.status(200).body("заглушка");
+    }
+
+    public ResponseEntity<?> postApiComment(CommentRequest commentRequest) {
+        return ResponseEntity.status(200).body("заглушка");
+    }
+
+    public ResponseEntity<?> postApiModeration(ModerationRequest moderationRequest) {
+        return ResponseEntity.status(200).body("заглушка");
+    }
+
+    public ResponseEntity<?> postApiPostLike(int postId) {
+        return ResponseEntity.status(200).body("заглушка");
+    }
+
+    public ResponseEntity<?> postApiPostDislike(int postId) {
+        return ResponseEntity.status(200).body("заглушка");
+    }
 
     private List<PostEntityResponse> getPostResponseListByPosts(List<Post> posts) {
         List<PostEntityResponse> postEntityResponseList = new ArrayList<>();

@@ -52,5 +52,13 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
                                                                                   Pageable pageable);
     @Query(value = "select * from posts where posts.is_active=1 and posts.moderation_status='ACCEPTED' " +
             "and posts.time<now() and year(time) = :year and month(time) = :month and dayofmonth(time) = :day", nativeQuery = true)
-    List<Post> getPostsByTime(@Param("year") int year, @Param("month") int month, @Param("day") int day);
+    List<Post> getPostsByTime(@Param("year") int year, @Param("month") int month, @Param("day") int day, Pageable pageable);
+
+    @Query(value = "SELECT posts.id, posts.is_active, posts.moderation_status, posts.moderator_id, " +
+            "posts.text, posts.time, posts.title, posts.user_id, posts.view_count FROM posts " +
+            "INNER JOIN tag2post ON posts.id = tag2post.post_id " +
+            "left join tags on tag2post.tag_id = tags.id " +
+            "where posts.is_active=1 and posts.moderation_status='ACCEPTED' and tags.name = :tag " +
+            "and posts.time<now() GROUP BY posts.id", nativeQuery = true)
+    List<Post> getPostsByTag(@Param("tag") String tag, Pageable pageable);
 }
