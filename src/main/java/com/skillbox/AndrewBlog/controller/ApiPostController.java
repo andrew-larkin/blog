@@ -58,12 +58,12 @@ public class ApiPostController {
 											  @RequestParam String status) {
 		return postService.getApiPostMy(offset, limit, status);
 	}
-/*
+
 	@GetMapping("/api/post/{ID}")
 	private ResponseEntity<?> getApiPostId(@RequestParam int id) {
 		return postService.getApiPostId(id);
 	}
-*/
+
 
 	@PostMapping("/api/post")
 	private ResponseEntity<?> postApiPost(@RequestBody PostRequest postRequest) {

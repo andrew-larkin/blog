@@ -2,21 +2,21 @@ package com.skillbox.AndrewBlog.api.response;
 
 public class IdNamePhotoResponse {
 
-    private long id;
+    private int id;
     private String name;
     private String photo;
 
-    public IdNamePhotoResponse(long id, String name, String photo) {
+    public IdNamePhotoResponse(int id, String name, String photo) {
         this.id = id;
         this.name = name;
         this.photo = photo;
     }
 
-    public long getId() {
+    public int getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(int id) {
         this.id = id;
     }
 

@@ -42,8 +42,8 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
     int getAmountOfPosts();
 
     @Query(value = "select * from posts where posts.is_active=1 and posts.moderation_status='ACCEPTED' " +
-            "and posts.id = :id", nativeQuery = true)
-    Optional<Post> getPostById(@Param("id") long id);
+            "and posts.time<now() and posts.id = :id", nativeQuery = true)
+    Optional<Post> getPostById(@Param("id") int id);
 
 
     List<Post> findByTextContainingAllIgnoreCaseAndIsActiveIsGreaterThanEqualAndModerationStatusEqualsAndTimeBefore(String query,

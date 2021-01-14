@@ -15,14 +15,14 @@ import org.springframework.web.bind.annotation.RestController;
 public class ApiGeneralController {
 
     private final SettingsService settingsService;
-    //private final TagsService tagsService;
+    private final TagsService tagsService;
     private final InitResponse initResponse;
 
 
     @Autowired
-    ApiGeneralController(SettingsService settingsService, /*TagsService tagsService,*/ InitResponse initResponse) {
+    ApiGeneralController(SettingsService settingsService, TagsService tagsService, InitResponse initResponse) {
         this.settingsService = settingsService;
-       // this.tagsService = tagsService;
+        this.tagsService = tagsService;
         this.initResponse = initResponse;
     }
 
@@ -36,8 +36,8 @@ public class ApiGeneralController {
         return initResponse;
     }
 
-    /*@GetMapping("/tag")
-    private ResponseEntity<?> getApiTag(@RequestParam String query) {
+    @GetMapping("/tag")
+    private ResponseEntity<?> getApiTag(@RequestParam(required = false) String query) {
         return tagsService.getApiTag(query);
-    }*/
+    }
 }

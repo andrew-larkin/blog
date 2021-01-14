@@ -3,9 +3,9 @@ package com.skillbox.AndrewBlog.api.response;
 public class NameWeightResponse {
 
     private String name;
-    private double weight;
+    private String weight;
 
-    public NameWeightResponse(String name, double weight) {
+    public NameWeightResponse(String name, String weight) {
         this.name = name;
         this.weight = weight;
     }
@@ -18,11 +18,11 @@ public class NameWeightResponse {
         this.name = name;
     }
 
-    public double getWeight() {
+    public String getWeight() {
         return weight;
     }
 
-    public void setWeight(double weight) {
+    public void setWeight(String weight) {
         this.weight = weight;
     }
 }

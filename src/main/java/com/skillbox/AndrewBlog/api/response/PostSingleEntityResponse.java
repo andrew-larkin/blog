@@ -2,9 +2,9 @@ package com.skillbox.AndrewBlog.api.response;
 
 import java.util.List;
 
-public class PostEntityWithCommentsAndTagsResponse {
+public class PostSingleEntityResponse {
 
-    private long id;
+    private int id;
     private long timestamp;
     private boolean active;
     private IdNameResponse user;
@@ -16,10 +16,7 @@ public class PostEntityWithCommentsAndTagsResponse {
     private List<CommentEntityResponse> comments;
     private List<String> tags;
 
-    public PostEntityWithCommentsAndTagsResponse(long id, long timestamp, boolean active,
-                                                 IdNameResponse user, String title, String text,
-                                                 int likeCount, int dislikeCount, int viewCount,
-                                                 List<CommentEntityResponse> comments, List<String> tags) {
+    public PostSingleEntityResponse(int id, long timestamp, boolean active, IdNameResponse user, String title, String text, int likeCount, int dislikeCount, int viewCount, List<CommentEntityResponse> comments, List<String> tags) {
         this.id = id;
         this.timestamp = timestamp;
         this.active = active;
@@ -33,11 +30,11 @@ public class PostEntityWithCommentsAndTagsResponse {
         this.tags = tags;
     }
 
-    public long getId() {
+    public int getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(int id) {
         this.id = id;
     }
 
@@ -57,11 +54,11 @@ public class PostEntityWithCommentsAndTagsResponse {
         this.active = active;
     }
 
-    public IdNameResponse getUser() {
+    public IdNameResponse getIdNameResponse() {
         return user;
     }
 
-    public void setUser(IdNameResponse user) {
+    public void setIdNameResponse(IdNameResponse user) {
         this.user = user;
     }
 
@@ -121,4 +118,3 @@ public class PostEntityWithCommentsAndTagsResponse {
         this.tags = tags;
     }
 }
-

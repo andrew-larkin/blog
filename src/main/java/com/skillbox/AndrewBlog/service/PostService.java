@@ -180,24 +180,29 @@ public class PostService {
         return ResponseEntity.status(200).body("заглушка");
     }
 
-        /*public ResponseEntity<?> getApiPostId(int id) {
+        public ResponseEntity<?> getApiPostId(int id) {
 
         Optional<Post> optionalPost = postRepository.getPostById(id);
-        if (optionalPost.isEmpty() || optionalPost.get().getTime().getTime() > System.currentTimeMillis()) {
+
+        if (optionalPost.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("Post with id '" + id + "' is not found.");
         }
 
-        int viewCount = optionalPost.get().getViewCount();
-        viewCount++;
-        optionalPost.get().setViewCount(viewCount);
-        postRepository.saveAndFlush(optionalPost.get());
-
         //после наладки авторизации добавить логику для автора и модератора
+        int moderatorId = 1456;
+        int userId = 1456;
+        if (!(optionalPost.get().getModeratorId() == moderatorId)
+                || !(optionalPost.get().getUser().getId() == userId)) {
+            int viewCount = optionalPost.get().getViewCount();
+            viewCount++;
+            optionalPost.get().setViewCount(viewCount);
+            postRepository.saveAndFlush(optionalPost.get());
+        }
 
-        return ResponseEntity.status(HttpStatus.OK).body(new PostEntityWithCommentsAndTagsResponse(
-                id,
-                System.currentTimeMillis(),
+        return ResponseEntity.status(HttpStatus.OK).body(new PostSingleEntityResponse(
+                optionalPost.get().getId(),
+                optionalPost.get().getTime().getTime(),
                 true,
                 getIdNameResponseByPost(optionalPost.get()),
                 optionalPost.get().getTitle(),
@@ -208,7 +213,7 @@ public class PostService {
                 getComments(optionalPost.get()),
                 getTagsByPost(optionalPost.get())
         ));
-    }*/
+    }
 
     public ResponseEntity<?> postApiPost(PostRequest postRequest) {
         return ResponseEntity.status(200).body("заглушка");
@@ -266,6 +271,7 @@ public class PostService {
     private List<CommentEntityResponse> getComments(Post post) {
 
         List<PostComment> comments = postCommentRepository.getPostCommentsByPostId(post.getId());
+        if (comments.isEmpty()) {return new ArrayList<>();}
         List<CommentEntityResponse> commentEntityResponseList = new ArrayList<>();
         for (PostComment postComment : comments) {
             commentEntityResponseList.add(new CommentEntityResponse(
@@ -287,13 +293,14 @@ public class PostService {
         );
     }
 
-    private TagListResponse getTagsByPost(Post post) {
+    private List<String> getTagsByPost(Post post) {
         List<String> tagsNameList = new ArrayList<>();
         List<Integer> tagsIdList = tag2PostRepository.getTagIdByPostId(post.getId());
+        if (tagsIdList.isEmpty()) {return new ArrayList<>();}
         for (int tagId : tagsIdList) {
             tagsNameList.add(tagsRepository.findById(tagId).get().getName());
         }
-        return new TagListResponse(tagsNameList);
+        return tagsNameList;
     }
 
     private String getAnnounceByPost(Post post) {

@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,11 +33,13 @@ public class TagsService {
 
     public ResponseEntity<?> getApiTag(String query) {
 
-        StringBuilder errors = new StringBuilder();
-        getQueryCheck(query, errors);
+        if (query != null) {
+            StringBuilder errors = new StringBuilder();
+            getQueryCheck(query, errors);
 
-        if (!errors.toString().equals("")) {
-            return ResponseEntity.status(200).body(new ErrorDescriptionResponse(errors.toString().trim()));
+            if (!errors.toString().equals("")) {
+                return ResponseEntity.status(200).body(new ErrorDescriptionResponse(errors.toString().trim()));
+            }
         }
 
         return ResponseEntity.status(HttpStatus.OK).body(new TagsResponse(
@@ -48,7 +51,7 @@ public class TagsService {
     private List<NameWeightResponse> getNameWeightResponseList(String query) {
         List<NameWeightResponse> nameWeightResponseList = new ArrayList<>();
         List<Tag> tags;
-        if (query.isEmpty()) {
+        if (query == null || query.equals("")) {
             tags = tagsRepository.getAllTags();
         } else {
             tags = tagsRepository.getTagByName(query);
@@ -62,12 +65,13 @@ public class TagsService {
     private NameWeightResponse getNameWeightResponse(Tag tag) {
         return new NameWeightResponse(
                 tag.getName(),
-                (double) tag2PostRepository
+                new DecimalFormat("#0.000").format((double) tag2PostRepository
                         .getAmountOfTagByTagId(tag.getId())/postRepository.getAmountOfPosts()
-        );
+        ));
     }
 
     private void getQueryCheck (String query, StringBuilder errors) {
+        if (!query.equals("")) {
         List<Tag> tags = tagsRepository.getAllTags();
         int count = 0;
         for (Tag tag : tags) {
@@ -77,6 +81,6 @@ public class TagsService {
         }
         if (count == 0) {
             errors.append("Tag ").append(query).append(" is not found.");
-        }
+        } }
     }
 }
