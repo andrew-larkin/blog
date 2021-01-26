@@ -7,7 +7,7 @@ public class PostSingleEntityResponse {
     private int id;
     private long timestamp;
     private boolean active;
-    private IdNameResponse user;
+    private Object user;
     private String title;
     private String text;
     private int likeCount;
@@ -16,7 +16,7 @@ public class PostSingleEntityResponse {
     private List<CommentEntityResponse> comments;
     private List<String> tags;
 
-    public PostSingleEntityResponse(int id, long timestamp, boolean active, IdNameResponse user, String title, String text, int likeCount, int dislikeCount, int viewCount, List<CommentEntityResponse> comments, List<String> tags) {
+    public PostSingleEntityResponse(int id, long timestamp, boolean active, Object user, String title, String text, int likeCount, int dislikeCount, int viewCount, List<CommentEntityResponse> comments, List<String> tags) {
         this.id = id;
         this.timestamp = timestamp;
         this.active = active;
@@ -54,11 +54,11 @@ public class PostSingleEntityResponse {
         this.active = active;
     }
 
-    public IdNameResponse getIdNameResponse() {
+    public Object getUser() {
         return user;
     }
 
-    public void setIdNameResponse(IdNameResponse user) {
+    public void setUser(Object user) {
         this.user = user;
     }
 
@@ -117,4 +117,6 @@ public class PostSingleEntityResponse {
     public void setTags(List<String> tags) {
         this.tags = tags;
     }
+
+
 }

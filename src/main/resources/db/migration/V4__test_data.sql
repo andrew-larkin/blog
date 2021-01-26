@@ -20,9 +20,9 @@ VALUES (1, "ACCEPTED", 1, 3, "2020-11-15' '19:57", "Rolling Back Migrations with
 "In this short tutorial, we'll explore a couple of ways to rollback a migration with Flyway", 5),
 (0, "NEW", 0, 4, "2020-11-15' '20:17", "Background Jobs in Spring with JobRunr",
 "In this tutorial, we're going to look into distributed background job scheduling and processing in Java using JobRunr and have it integrate with Spring", 0),
-(1, "ACCEPTED", 1, 3, "2020-11-15' '20:27", "Redis vs MongoDB",
+(1, "ACCEPTED", 1, 3, "2020-11-16' '20:27", "Redis vs MongoDB",
 "First, we'll take a quick look at the features offered by Redis and MongoDB. Then, we'll discuss when to use Redis or MongoDB by comparing them against each other.", 3),
-(1, "ACCEPTED", 1, 2, "2020-11-15' '20:41", "ArrayList vs. LinkedList in Java",
+(1, "ACCEPTED", 1, 2, "2020-11-17' '20:41", "ArrayList vs. LinkedList in Java",
 "Collections in Java are based on a couple of core interfaces and more than a dozen implementation classes. The wide selection of different implementations can sometimes lead to confusion.", 2);
 
 INSERT INTO `tag2post` (`id`, `post_id`, `tag_id`)

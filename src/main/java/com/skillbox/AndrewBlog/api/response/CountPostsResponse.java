@@ -1,13 +1,15 @@
 package com.skillbox.AndrewBlog.api.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.List;
 
 public class CountPostsResponse {
 
     private int count;
-    private List<PostEntityResponse> posts;
+    private Object posts;
 
-    public CountPostsResponse(int count, List<PostEntityResponse> posts) {
+    public CountPostsResponse(int count, Object posts) {
         this.count = count;
         this.posts = posts;
     }
@@ -20,11 +22,11 @@ public class CountPostsResponse {
         this.count = count;
     }
 
-    public List<PostEntityResponse> getPostEntityResponseList() {
+    public Object getPosts() {
         return posts;
     }
 
-    public void setPostEntityResponseList(List<PostEntityResponse> posts) {
+    public void setPosts(Object posts) {
         this.posts = posts;
     }
 }

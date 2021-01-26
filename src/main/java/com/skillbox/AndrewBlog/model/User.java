@@ -51,6 +51,14 @@ public class User {
         this.photo = photo;
     }
 
+    public User(Date regTime, String name, String email, String password, String code) {
+        this.regTime = regTime;
+        this.name = name;
+        this.email = email;
+        this.password = password;
+        this.code = code;
+    }
+
     @OneToMany(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH, CascadeType.REFRESH})
     private List<Post> posts;
 

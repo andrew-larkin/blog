@@ -6,10 +6,8 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface SettingsRepository extends CrudRepository<GlobalSettings, Integer> {
-
-    @Query(name = "select value from global_settings where name = :name", nativeQuery = true)
-    String getGlobalSettingsByName(@Param("name") String name);
-
 }

@@ -1,7 +1,9 @@
 package com.skillbox.AndrewBlog.service;
 
 import com.skillbox.AndrewBlog.api.response.SettingsResponse;
+import com.skillbox.AndrewBlog.model.GlobalSettings;
 import com.skillbox.AndrewBlog.repository.SettingsRepository;
+import org.apache.tomcat.jni.Global;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,9 +22,9 @@ public class SettingsService {
     public ResponseEntity<?> getApiSettings () {
 
         return ResponseEntity.status(HttpStatus.OK).body(new SettingsResponse(
-                settingsRepository.getGlobalSettingsByName("MULTIUSER_MODE"),
-                settingsRepository.getGlobalSettingsByName("POST_PREMODERATION"),
-                settingsRepository.getGlobalSettingsByName("STATISTICS_IS_PUBLIC")
+                settingsRepository.findById(1).get().getValue(),
+                settingsRepository.findById(2).get().getValue(),
+                settingsRepository.findById(3).get().getValue()
         ));
     }
 }

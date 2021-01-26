@@ -59,8 +59,8 @@ public class ApiPostController {
 		return postService.getApiPostMy(offset, limit, status);
 	}
 
-	@GetMapping("/api/post/{ID}")
-	private ResponseEntity<?> getApiPostId(@RequestParam int id) {
+	@GetMapping("/api/post/{id}")
+	private ResponseEntity<?> getApiPostId(@PathVariable int id) {
 		return postService.getApiPostId(id);
 	}
 
@@ -71,7 +71,7 @@ public class ApiPostController {
 	}
 
 	@PutMapping("/api/post/{ID}")
-	private ResponseEntity<?> putApiPost(@RequestParam int id,
+	private ResponseEntity<?> putApiPost(@PathVariable int id,
 										   @RequestBody PostRequest postRequest) {
 		return postService.putApiPost(id, postRequest);
 	}

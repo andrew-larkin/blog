@@ -24,7 +24,7 @@ import java.util.Optional;
 @Service
 public class PostService {
 
-    private byte isActive = 1;
+    private final byte isActive = 1;
 
     private PostRepository postRepository;
     private PostVoteRepository postVoteRepository;
@@ -202,7 +202,7 @@ public class PostService {
 
         return ResponseEntity.status(HttpStatus.OK).body(new PostSingleEntityResponse(
                 optionalPost.get().getId(),
-                optionalPost.get().getTime().getTime(),
+                optionalPost.get().getTime().getTime()/1000,
                 true,
                 getIdNameResponseByPost(optionalPost.get()),
                 optionalPost.get().getTitle(),
@@ -239,18 +239,18 @@ public class PostService {
         return ResponseEntity.status(200).body("заглушка");
     }
 
-    private List<PostEntityResponse> getPostResponseListByPosts(List<Post> posts) {
-        List<PostEntityResponse> postEntityResponseList = new ArrayList<>();
-        for (Post post : posts) {
-            postEntityResponseList.add(getPostEntityResponseByPost(post));
+    private List<PostEntityResponse> getPostResponseListByPosts(List<Post> postList) {
+        List<PostEntityResponse> posts = new ArrayList<>();
+        for (Post post : postList) {
+            posts.add(getPostEntityResponseByPost(post));
         }
-        return postEntityResponseList;
+        return posts;
     }
 
     private PostEntityResponse getPostEntityResponseByPost(Post post) {
         return new PostEntityResponse(
                 post.getId(),
-                post.getTime().getTime(),
+                post.getTime().getTime()/1000,
                 getIdNameResponseByPost(post),
                 post.getTitle(),
                 getAnnounceByPost(post),
@@ -262,10 +262,9 @@ public class PostService {
     }
 
     private IdNameResponse getIdNameResponseByPost(Post post) {
-        return new IdNameResponse(
-                post.getUser().getId(),
-                post.getUser().getName()
-        );
+        IdNameResponse user = new IdNameResponse(post.getUser().getId(),
+                post.getUser().getName());
+        return user;
     }
 
     private List<CommentEntityResponse> getComments(Post post) {
@@ -276,7 +275,7 @@ public class PostService {
         for (PostComment postComment : comments) {
             commentEntityResponseList.add(new CommentEntityResponse(
                     postComment.getId(),
-                    postComment.getTime().getTime(),
+                    postComment.getTime().getTime()/1000,
                     postComment.getText(),
                     getIdNamePhotoResponseByComment(postComment)
             ));

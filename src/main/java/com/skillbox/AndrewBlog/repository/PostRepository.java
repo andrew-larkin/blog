@@ -1,5 +1,6 @@
 package com.skillbox.AndrewBlog.repository;
 
+import com.skillbox.AndrewBlog.model.ModerationStatus;
 import com.skillbox.AndrewBlog.model.Post;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -61,4 +62,30 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
             "where posts.is_active=1 and posts.moderation_status='ACCEPTED' and tags.name = :tag " +
             "and posts.time<now() GROUP BY posts.id", nativeQuery = true)
     List<Post> getPostsByTag(@Param("tag") String tag, Pageable pageable);
+
+   /* int countByTitleAndIsActiveAndModerationStatusAndBetweenAndTimeIsBefore(byte isActive,
+                   ModerationStatus moderationStatus, Date dateFrom, Date dateTo, Date now);
+*/
+    @Query(value = "select year(posts.time) from posts " +
+            "where posts.is_active=1 and posts.moderation_status='ACCEPTED' " +
+            "and posts.time<now() group by year(posts.time)", nativeQuery = true)
+    List<Integer> getYears();
+
+    @Query(value = "SELECT date(time) from posts " +
+            "where posts.is_active=1 and posts.moderation_status='ACCEPTED' " +
+            "and posts.time<now() group by date(time) order by date(time)", nativeQuery = true)
+    List<Date> getDates();
+
+    @Query(value = "SELECT count(date(time)) from posts " +
+            "where date(time) = date(:time) and posts.is_active=1 and posts.moderation_status='ACCEPTED' " +
+            "and posts.time<now() group by date(time)", nativeQuery = true)
+    Integer getDatesCount(@Param("time") Date date);
+
+    @Query(value = "SELECT date(time) from posts where year(time) = :time " +
+            "and posts.is_active=1 and posts.moderation_status='ACCEPTED' " +
+            "and posts.time<now() group by date(time) order by date(time)", nativeQuery = true)
+    List<Date> getDatesByYear(@Param("time") String year);
+
+    Integer countIdByModerationStatus(ModerationStatus moderationStatus);
+
 }
