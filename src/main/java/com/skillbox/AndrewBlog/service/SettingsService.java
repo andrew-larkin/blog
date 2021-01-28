@@ -22,9 +22,9 @@ public class SettingsService {
     public ResponseEntity<?> getApiSettings () {
 
         return ResponseEntity.status(HttpStatus.OK).body(new SettingsResponse(
-                settingsRepository.findById(1).get().getValue(),
-                settingsRepository.findById(2).get().getValue(),
-                settingsRepository.findById(3).get().getValue()
+                settingsRepository.findById(1).get().getValue().equals("YES"),
+                settingsRepository.findById(2).get().getValue().equals("YES"),
+                settingsRepository.findById(3).get().getValue().equals("YES")
         ));
     }
 }

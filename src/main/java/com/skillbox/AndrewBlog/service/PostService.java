@@ -303,10 +303,11 @@ public class PostService {
     }
 
     private String getAnnounceByPost(Post post) {
+        StringBuilder stringBuilder = new StringBuilder();
         if (post.getText().length() <= 150) {
             return post.getText();
         } else {
-            return post.getText().substring(0, 149);
+            return stringBuilder.append(post.getText().substring(0, 149)).append("...").toString();
         }
     }
 

@@ -88,4 +88,9 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
 
     Integer countIdByModerationStatus(ModerationStatus moderationStatus);
 
+    @Query(value = "select sum(view_count) from posts", nativeQuery = true)
+    int getAmountOfViewCounts();
+
+    @Query(value = "select time from posts order by id limit 1", nativeQuery = true)
+    Date getDateOfFirstPublication();
 }

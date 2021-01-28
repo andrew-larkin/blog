@@ -3,6 +3,7 @@ package com.skillbox.AndrewBlog.controller;
 import com.skillbox.AndrewBlog.api.response.InitResponse;
 import com.skillbox.AndrewBlog.service.CalendarService;
 import com.skillbox.AndrewBlog.service.SettingsService;
+import com.skillbox.AndrewBlog.service.StatisticService;
 import com.skillbox.AndrewBlog.service.TagsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -19,14 +20,16 @@ public class ApiGeneralController {
     private final TagsService tagsService;
     private final InitResponse initResponse;
     private final CalendarService calendarService;
+    private final StatisticService statisticService;
 
     @Autowired
     ApiGeneralController(SettingsService settingsService, TagsService tagsService, InitResponse initResponse,
-                         CalendarService calendarService) {
+                         CalendarService calendarService, StatisticService statisticService) {
         this.settingsService = settingsService;
         this.tagsService = tagsService;
         this.initResponse = initResponse;
         this.calendarService = calendarService;
+        this.statisticService = statisticService;
     }
 
     @GetMapping("/settings")
@@ -47,6 +50,11 @@ public class ApiGeneralController {
     @GetMapping("/calendar")
     private ResponseEntity<?> getApiCalendar(@RequestParam(required = false) String year) {
         return calendarService.getApiCalendar(year);
+    }
+
+    @GetMapping("/statistics/all")
+    private ResponseEntity<?> getApiStatisticsAll() {
+        return statisticService.getApiStatisticsAll();
     }
 
 }

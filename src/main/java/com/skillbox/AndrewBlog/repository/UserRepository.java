@@ -15,4 +15,6 @@ public interface UserRepository extends CrudRepository<User, Integer> {
     User getUserByComment(@Param("user_id") long userId);
 
     Optional<User> getUserByEmail(String email);
+
+    User getUserByCode(String code);
 }

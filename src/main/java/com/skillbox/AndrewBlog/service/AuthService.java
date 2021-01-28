@@ -30,6 +30,9 @@ public class AuthService {
     private final PostRepository postRepository;
 
     @Autowired
+    private MailSender mailSender;
+
+    @Autowired
     public AuthService(CaptchaRepository captchaRepository, UserRepository userRepository, PostRepository postRepository) {
         this.captchaRepository = captchaRepository;
         this.userRepository = userRepository;
@@ -124,15 +127,66 @@ public class AuthService {
     }
 
     public ResponseEntity<?> postApiAuthRestore (EmailRequest emailRequest) {
-        return ResponseEntity.status(HttpStatus.OK).body("rr");
+        if (userRepository.getUserByEmail(emailRequest.getEmail()).isEmpty()) {
+            return ResponseEntity.status(HttpStatus.OK).body(new ResultResponse(
+                    false
+            ));
+        }
+        String hash = generateCaptchaCode(20);
+        User user = userRepository.getUserByEmail(emailRequest.getEmail()).get();
+        user.setCode(hash);
+        userRepository.save(user);
+
+        String message = String.format("Hello, %s!\n" +
+               "Visit next link to restore your password: http://localhost:8080/login/change-password/%s",
+                user.getName(),
+                user.getCode());
+        mailSender.send(user.getEmail(), "Activation code", message);
+
+        return ResponseEntity.status(HttpStatus.OK).body(new ResultResponse(
+                true
+        ));
     }
 
     public ResponseEntity<?> postApiAuthPassword (PasswordRequest passwordRequest) {
-        return ResponseEntity.status(HttpStatus.OK).body("rr");
+
+        Map<String, String> errors = new HashMap<>();
+
+        User user = userRepository.getUserByCode(passwordRequest.getCode());
+
+        if (user == null) {
+            errors.put("code", "Ссылка для восстановления пароля устарела." +
+                    " <a href=\n" +
+                    "        \\\"/auth/restore\\\">Запросить ссылку снова</a>\"");
+            return ResponseEntity.status(HttpStatus.OK).body(new ResultErrorsResponse(
+                    false,
+                    errors
+            ));
+        } else
+        if (passwordRequest.getPassword().length() < 6) {
+            errors.put("password", "Пароль короче 6-ти символов");
+            return ResponseEntity.status(HttpStatus.OK).body(new ResultErrorsResponse(
+                    false,
+                    errors
+            ));
+        } else
+        if (!getCaptchaCorrect(passwordRequest).equals(passwordRequest.getCaptcha())) {
+            errors.put("captcha", getCaptchaCorrect(passwordRequest));
+            return ResponseEntity.status(HttpStatus.OK).body(new ResultErrorsResponse(
+                    false,
+                    errors
+            ));
+        } else {
+
+                return ResponseEntity.status(HttpStatus.OK).body(new ResultResponse(
+                                true
+                        )
+                );
+            }
     }
 
     public ResponseEntity<?> getApiAuthLogout () {
-        return ResponseEntity.status(HttpStatus.OK).body("rr");
+        return ResponseEntity.status(HttpStatus.OK).body("Заглушка");
     }
 
     private UserResponse getUserByEmail(String email) {
@@ -169,6 +223,14 @@ public class AuthService {
         if (captchaRepository.findSecretCodeByCode(registerRequest.getCaptcha())
                 .get().getSecretCode().equals(registerRequest.getCaptchaSecret())) {
             return registerRequest.getCaptcha();
+        }
+        return "Код с картинки введен неверно";
+    }
+
+    private String getCaptchaCorrect(PasswordRequest passwordRequest) {
+        if (captchaRepository.findSecretCodeByCode(passwordRequest.getCaptcha())
+                .get().getSecretCode().equals(passwordRequest.getCaptchaSecret())) {
+            return passwordRequest.getCaptcha();
         }
         return "Код с картинки введен неверно";
     }
