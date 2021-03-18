@@ -6,8 +6,10 @@ import com.skillbox.AndrewBlog.api.request.PostRequest;
 import com.skillbox.AndrewBlog.api.response.*;
 import com.skillbox.AndrewBlog.model.Post;
 import com.skillbox.AndrewBlog.model.PostComment;
+import com.skillbox.AndrewBlog.model.PostVote;
 import com.skillbox.AndrewBlog.model.User;
 import com.skillbox.AndrewBlog.repository.*;
+import com.skillbox.AndrewBlog.security.PersonDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -32,17 +34,20 @@ public class PostService {
     private UserRepository userRepository;
     private Tag2PostRepository tag2PostRepository;
     private TagsRepository tagsRepository;
+    private PersonDetailsService personDetailsService;
 
     @Autowired
     public PostService(PostRepository postRepository, PostVoteRepository postVoteRepository,
                        PostCommentRepository postCommentRepository, UserRepository userRepository,
-                       Tag2PostRepository tag2PostRepository, TagsRepository tagsRepository) {
+                       Tag2PostRepository tag2PostRepository, TagsRepository tagsRepository,
+                       PersonDetailsService personDetailsService) {
         this.postRepository = postRepository;
         this.postVoteRepository = postVoteRepository;
         this.postCommentRepository = postCommentRepository;
         this.userRepository = userRepository;
         this.tag2PostRepository = tag2PostRepository;
         this.tagsRepository = tagsRepository;
+        this.personDetailsService = personDetailsService;
     }
 
     public ResponseEntity<?> getApiPosts(int offset, int limit, String mode) {
@@ -232,7 +237,26 @@ public class PostService {
     }
 
     public ResponseEntity<?> postApiPostLike(int postId) {
-        return ResponseEntity.status(200).body("заглушка");
+
+        final byte LIKE = 1;
+
+        User user = personDetailsService.getCurrentUser();
+        if (postVoteRepository.findByPostIdAndUserId(postId, user.getId()).isEmpty()) {
+            postVoteRepository.save(new PostVote(
+                    user.getId(),
+                    postId,
+                    new Date(System.currentTimeMillis()),
+                    LIKE
+            ));
+            return ResponseEntity.status(200).body(new ResultResponse(true));
+        } else if (postVoteRepository.findByPostIdAndUserId(postId, user.getId()).get().getValue() != LIKE) {
+            PostVote changePostVote = postVoteRepository.findByPostIdAndUserId(postId, user.getId()).get();
+            changePostVote.setValue(LIKE);
+            postVoteRepository.save(changePostVote);
+            return ResponseEntity.status(200).body(new ResultResponse(true));
+        }
+            return ResponseEntity.status(200).body(new ResultResponse(false));
+
     }
 
     public ResponseEntity<?> postApiPostDislike(int postId) {

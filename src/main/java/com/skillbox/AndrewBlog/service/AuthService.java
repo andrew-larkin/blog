@@ -12,10 +12,19 @@ import com.skillbox.AndrewBlog.model.ModerationStatus;
 import com.skillbox.AndrewBlog.model.User;
 import com.skillbox.AndrewBlog.repository.CaptchaRepository;
 import com.skillbox.AndrewBlog.repository.PostRepository;
+import com.skillbox.AndrewBlog.repository.SettingsRepository;
 import com.skillbox.AndrewBlog.repository.UserRepository;
+import com.skillbox.AndrewBlog.security.PersonDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -28,19 +37,38 @@ public class AuthService {
     private final CaptchaRepository captchaRepository;
     private final UserRepository userRepository;
     private final PostRepository postRepository;
+    private final MailSender mailSender;
+    private BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
+    private final PersonDetailsService personDetailsService;
+    private final SettingsRepository settingsRepository;
 
     @Autowired
-    private MailSender mailSender;
-
-    @Autowired
-    public AuthService(CaptchaRepository captchaRepository, UserRepository userRepository, PostRepository postRepository) {
+    public AuthService(CaptchaRepository captchaRepository, UserRepository userRepository,
+                       PostRepository postRepository, MailSender mailSender,
+                       //BCryptPasswordEncoder bCryptPasswordEncoder,
+                       PersonDetailsService personDetailsService, SettingsRepository settingsRepository) {
         this.captchaRepository = captchaRepository;
         this.userRepository = userRepository;
         this.postRepository = postRepository;
+        this.mailSender = mailSender;
+        //this.bCryptPasswordEncoder = bCryptPasswordEncoder;
+        this.personDetailsService = personDetailsService;
+        this.settingsRepository = settingsRepository;
     }
 
     public ResponseEntity<?> getApiAuthCheck() {
-        return ResponseEntity.status(HttpStatus.OK).body(new CheckResponse("false"));
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth.getPrincipal().toString().equals("anonymousUser")) {
+            return ResponseEntity.status(HttpStatus.OK).body(new CheckResponse("false"));
+        }
+        User user = personDetailsService.getCurrentUser();
+
+        return ResponseEntity.status(HttpStatus.OK).body(new ResultUserResponse(
+                true,
+                getUserResponse(user.getEmail())
+        ));
     }
 
     public ResponseEntity<?> getApiAuthCaptcha() {
@@ -94,10 +122,9 @@ public class AuthService {
             ));
         } else {
             userRepository.save(new User(
-                    new Date(System.currentTimeMillis()),
-                    registerRequest.getName(),
                     registerRequest.getEmail(),
-                    registerRequest.getPassword(),
+                    registerRequest.getName(),
+                    bCryptPasswordEncoder.encode(registerRequest.getPassword()),
                     registerRequest.getCaptcha()
             ));
             return ResponseEntity.status(HttpStatus.OK).body(new ResultResponse(
@@ -108,23 +135,6 @@ public class AuthService {
 
     }
 
-    public ResponseEntity<?> postApiAuthLogin (LoginRequest loginRequest) {
-
-        Map<String, Integer> sessions = new HashMap<>();
-
-        if (userRepository.getUserByEmail(loginRequest.getEmail()).isEmpty() &&
-                !userRepository.getUserByEmail(loginRequest.getEmail()).get().getPassword().equals(loginRequest.getPassword())) {
-            return ResponseEntity.status(HttpStatus.OK).body(new ResultResponse(
-                    false
-            ));
-        }
-
-        sessions.put(loginRequest.getEmail(), userRepository.getUserByEmail(loginRequest.getEmail()).get().getId());
-        return ResponseEntity.status(HttpStatus.OK).body(new ResultUserResponse(
-                true,
-                getUserByEmail(loginRequest.getEmail())
-        ));
-    }
 
     public ResponseEntity<?> postApiAuthRestore (EmailRequest emailRequest) {
         if (userRepository.getUserByEmail(emailRequest.getEmail()).isEmpty()) {
@@ -185,24 +195,6 @@ public class AuthService {
             }
     }
 
-    public ResponseEntity<?> getApiAuthLogout () {
-        return ResponseEntity.status(HttpStatus.OK).body("Заглушка");
-    }
-
-    private UserResponse getUserByEmail(String email) {
-        return new UserResponse(
-                userRepository.getUserByEmail(email).get().getId(),
-                userRepository.getUserByEmail(email).get().getName(),
-                userRepository.getUserByEmail(email).get().getPhoto(),
-                userRepository.getUserByEmail(email).get().getEmail(),
-                userRepository.getUserByEmail(email).get().getIsModerator() == 1,
-                userRepository.getUserByEmail(email).get().getIsModerator() == 1
-                        ? postRepository.countIdByModerationStatus(ModerationStatus.NEW) : 0,
-                userRepository.getUserByEmail(email).get().getIsModerator() == 1
-        );
-    }
-
-
     private String getEmailCorrect(String email) {
 
         Pattern pattern = Pattern.compile("\\w+([\\.-]?\\w+)*@\\w+([\\.-]?\\w+)*\\.\\w{2,4}");
@@ -256,6 +248,22 @@ public class AuthService {
                 captchaRepository.delete(captchaCode);
             }
         }
+    }
+
+    private UserResponse getUserResponse(String email) {
+        User currentUser = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException(email));
+        byte isModerator = currentUser.getIsModerator();
+        return new UserResponse(
+                        currentUser.getId(),
+                        currentUser.getName(),
+                        currentUser.getPhoto(),
+                        currentUser.getEmail(),
+                isModerator == 1,
+                        isModerator == 1 ? postRepository.countIdByModerationStatus(ModerationStatus.NEW) : 0,
+                        isModerator == 1
+                );
+
     }
 
 }

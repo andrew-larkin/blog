@@ -14,10 +14,6 @@ management:
         include: "*"
 
 spring:
-  security:
-    user:
-      name: "andrew"
-      password: "1456"
   jpa:
     hibernate:
       ddl-auto: "validate"
@@ -26,7 +22,7 @@ spring:
         dialect: "org.hibernate.dialect.MySQL55Dialect"
     show-sql: "true"
   datasource:
-    url: "jdbc:mysql://localhost:3306/blogDB?serverTimezone=UTC&createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=utf8"
+    url: "jdbc:mysql://localhost:3306/blogdb?serverTimezone=UTC&createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=utf8"
     username: "root"
     password: ""
     driver-class-name: "com.mysql.cj.jdbc.Driver"
@@ -36,8 +32,17 @@ spring:
     password: "12345678"
     port: "465"
     protocol: "smtps"
-  #flyway:
-  #  enabled: "false"
 
 mail:
     debug: "true"
+
+cloudinary:
+   cloud:
+     name: ${CLOUDINARY_CLOUD_NAME:unevbe14}
+   api:
+     key: ${CLOUDINARY_API_KEY:998333224815347}
+     secret: ${CLOUDINARY_API_SECRET:Z3_UjO2cAOKy-7p-k_BcQWENLX8}
+
+upload:
+  file:
+    types: png,jpg,jpeg

@@ -4,9 +4,11 @@ import com.skillbox.AndrewBlog.api.request.EmailRequest;
 import com.skillbox.AndrewBlog.api.request.LoginRequest;
 import com.skillbox.AndrewBlog.api.request.PasswordRequest;
 import com.skillbox.AndrewBlog.api.request.RegisterRequest;
+import com.skillbox.AndrewBlog.security.PersonDetailsService;
 import com.skillbox.AndrewBlog.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,10 +20,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class ApiAuthController {
 
     private final AuthService authService;
+    private final PersonDetailsService personDetailsService;
 
     @Autowired
-    public ApiAuthController(AuthService authService) {
+    public ApiAuthController(AuthService authService, PersonDetailsService personDetailsService) {
         this.authService = authService;
+        this.personDetailsService = personDetailsService;
     }
 
     @GetMapping("/check")
@@ -41,7 +45,7 @@ public class ApiAuthController {
 
     @PostMapping("/login")
     private ResponseEntity<?> postApiAuthLogin(@RequestBody LoginRequest loginRequest) {
-        return authService.postApiAuthLogin(loginRequest);
+        return personDetailsService.postApiAuthLogin(loginRequest);
     }
 
     @PostMapping("/restore")
@@ -54,8 +58,9 @@ public class ApiAuthController {
         return authService.postApiAuthPassword(passwordRequest);
     }
 
+    //@Secured({"USER", "MODERATOR"})
     @GetMapping("/logout")
     private ResponseEntity<?> getApiAuthLogout() {
-        return authService.getApiAuthLogout();
+        return personDetailsService.getApiAuthLogout();
     }
 }

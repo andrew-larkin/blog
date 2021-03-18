@@ -1,6 +1,5 @@
 package com.skillbox.AndrewBlog.service;
 
-import com.skillbox.AndrewBlog.api.response.ErrorDescriptionResponse;
 import com.skillbox.AndrewBlog.api.response.YearsPostsResponse;
 import com.skillbox.AndrewBlog.repository.PostRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,9 +7,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class CalendarService {
@@ -22,50 +24,48 @@ public class CalendarService {
         this.postRepository = postRepository;
     }
 
-    public ResponseEntity<?> getApiCalendar(String year) {
+    public ResponseEntity<?> getApiCalendar(Integer year) {
 
-        if (year != null) {
-            StringBuilder errors = new StringBuilder();
-            if (Integer.parseInt(year) < 2020 || Integer.parseInt(year) > LocalDateTime.now().getYear()) {
-                errors.append("'year' should be greater than 2020 and less then ").append(LocalDateTime.now().getYear()).append(". ");
+        Map<String, Integer> posts = new TreeMap<>();
+
+        if (year == null) {
+            List<Integer> years = postRepository.getYearsWithActivePosts().stream()
+                    .sorted()
+                    .collect(Collectors.toList());
+
+            List<String> dates = postRepository.getDatesWithActivePosts().stream()
+                    .sorted()
+                    .collect(Collectors.toList());
+            for (String date : dates) {
+                posts.put(date, postRepository.getAmountOfPostsByDate(date));
             }
 
-            if (!errors.toString().equals("")) {
-                return ResponseEntity.status(200).body(new ErrorDescriptionResponse(errors.toString().trim()));
-            }
+            return ResponseEntity.status(HttpStatus.OK).body(new YearsPostsResponse(
+                    years,
+                    posts
+            ));
 
         }
         return ResponseEntity.status(HttpStatus.OK).body(new YearsPostsResponse(
                 getYears(year),
                 getPosts(year)
         ));
+
     }
 
-    private List<Integer> getYears(String year) {
-
-        List<Integer> years = new ArrayList<>();
-        if (year != null) {
-            years.add(Integer.parseInt(year));
-            return years;
-        }
-
-        return postRepository.getYears();
+    private List<Integer> getYears(Integer year) {
+        return Stream.of(year)
+                .filter(y -> y <= LocalDateTime.now().getYear())
+                .collect(Collectors.toList());
     }
 
-    private Map<String, Integer> getPosts (String year) {
+    private Map<String, Integer> getPosts (Integer year) {
 
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
         Map<String, Integer> posts = new TreeMap<>();
-        if (year == null) {
-            for (Date date : postRepository.getDates()) {
-                posts.put(simpleDateFormat.format(date), postRepository
-                        .getDatesCount(date));
-            }
-        } else {
-            for (Date date : postRepository.getDatesByYear(year)) {
-                posts.put(simpleDateFormat.format(date), postRepository
-                        .getDatesCount(date));
-            }
+        List<String> dates = postRepository.getDatesWithActivePostsByYear(year);
+
+        for (String date : dates) {
+            posts.put(date, postRepository.getAmountOfPostsByDate(date));
         }
         return posts;
     }

@@ -1,16 +1,13 @@
 package com.skillbox.AndrewBlog.controller;
 
+import com.skillbox.AndrewBlog.api.request.SettingsRequest;
 import com.skillbox.AndrewBlog.api.response.InitResponse;
-import com.skillbox.AndrewBlog.service.CalendarService;
-import com.skillbox.AndrewBlog.service.SettingsService;
-import com.skillbox.AndrewBlog.service.StatisticService;
-import com.skillbox.AndrewBlog.service.TagsService;
+import com.skillbox.AndrewBlog.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.annotation.Secured;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api")
@@ -21,15 +18,17 @@ public class ApiGeneralController {
     private final InitResponse initResponse;
     private final CalendarService calendarService;
     private final StatisticService statisticService;
+    private final ProfileService profileService;
 
     @Autowired
     ApiGeneralController(SettingsService settingsService, TagsService tagsService, InitResponse initResponse,
-                         CalendarService calendarService, StatisticService statisticService) {
+                         CalendarService calendarService, StatisticService statisticService, ProfileService profileService) {
         this.settingsService = settingsService;
         this.tagsService = tagsService;
         this.initResponse = initResponse;
         this.calendarService = calendarService;
         this.statisticService = statisticService;
+        this.profileService = profileService;
     }
 
     @GetMapping("/settings")
@@ -48,13 +47,36 @@ public class ApiGeneralController {
     }
 
     @GetMapping("/calendar")
-    private ResponseEntity<?> getApiCalendar(@RequestParam(required = false) String year) {
+    private ResponseEntity<?> getApiCalendar(@RequestParam(required = false) Integer year) {
         return calendarService.getApiCalendar(year);
     }
 
     @GetMapping("/statistics/all")
     private ResponseEntity<?> getApiStatisticsAll() {
         return statisticService.getApiStatisticsAll();
+    }
+
+    //@Secured("USER")
+    @PostMapping("/profile/my")
+    private ResponseEntity<?> postApiProfileMy(@RequestParam(required = false) MultipartFile photo,
+                                               @RequestParam(required = false) String name,
+                                               @RequestParam(required = false) String email,
+                                               @RequestParam(required = false) String password,
+                                               @RequestParam(required = false) byte removePhoto) {
+        return profileService.postApiProfileMy(photo, name, email,
+                password, removePhoto);
+    }
+
+    //@Secured("USER")
+    @GetMapping("/statistics/my")
+    private ResponseEntity<?> getApiStatisticsMy() {
+        return statisticService.getApiStatisticsMy();
+    }
+
+    //@Secured("MODERATOR")
+    @PutMapping("/settings")
+    private ResponseEntity<?> putApiSettings(@RequestParam SettingsRequest settingsRequest) {
+        return settingsService.putApiSettings(settingsRequest);
     }
 
 }

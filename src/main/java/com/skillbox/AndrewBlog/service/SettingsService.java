@@ -1,5 +1,6 @@
 package com.skillbox.AndrewBlog.service;
 
+import com.skillbox.AndrewBlog.api.request.SettingsRequest;
 import com.skillbox.AndrewBlog.api.response.SettingsResponse;
 import com.skillbox.AndrewBlog.model.GlobalSettings;
 import com.skillbox.AndrewBlog.repository.SettingsRepository;
@@ -26,5 +27,9 @@ public class SettingsService {
                 settingsRepository.findById(2).get().getValue().equals("YES"),
                 settingsRepository.findById(3).get().getValue().equals("YES")
         ));
+    }
+
+    public ResponseEntity<?> putApiSettings(SettingsRequest settingsRequest) {
+        return ResponseEntity.status(HttpStatus.OK).body("");
     }
 }

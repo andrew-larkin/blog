@@ -93,4 +93,21 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
 
     @Query(value = "select time from posts order by id limit 1", nativeQuery = true)
     Date getDateOfFirstPublication();
+
+    @Query(value = "select year(time) from posts where is_active = 1 and " +
+            "moderation_status = 'ACCEPTED' and time <= now() group by year(time) desc", nativeQuery = true)
+    Optional<Integer> getYearsWithActivePosts();
+
+    @Query(value = "select date(time) from posts where is_active = 1 and " +
+            "moderation_status = 'ACCEPTED' and date(time) <= now() group by date(time)", nativeQuery = true)
+    List<String> getDatesWithActivePosts();
+
+    @Query(value = "select count(*) from posts where is_active = 1 and " +
+            "moderation_status = 'ACCEPTED' and date(time) = :time", nativeQuery = true)
+    Integer getAmountOfPostsByDate(@Param("time") String date);
+
+    @Query(value = "select date(time) from posts where is_active = 1 and " +
+            "moderation_status = 'ACCEPTED' and date(time) <= now() " +
+            "and year(time) = :time group by date(time)", nativeQuery = true)
+    List<String> getDatesWithActivePostsByYear(@Param("time") Integer year);
 }

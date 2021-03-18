@@ -63,4 +63,5 @@ name varchar(255) not null,
 password varchar(255) not null,
 photo TEXT,
 reg_time DATETIME NOT NULL,
+application_user_role ENUM('USER','MODERATOR') NOT NULL DEFAULT 'USER',
 primary key (id)) engine=InnoDB;

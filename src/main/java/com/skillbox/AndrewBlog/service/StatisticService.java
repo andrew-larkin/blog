@@ -38,4 +38,10 @@ public class StatisticService {
             ));
         }
     }
+
+    public ResponseEntity<?> getApiStatisticsMy() {
+
+        return ResponseEntity.status(HttpStatus.OK).body("");
+
+    }
 }

@@ -2,14 +2,17 @@ package com.skillbox.AndrewBlog.model;
 
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.skillbox.AndrewBlog.security.ApplicationUserRole;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.persistence.*;
-import java.util.Date;
-import java.util.List;
+import java.time.Instant;
+import java.util.*;
 
 @Entity
 @Table(name="users")
-public class User {
+public class User implements UserDetails {
 
     public User() {
     }
@@ -51,13 +54,17 @@ public class User {
         this.photo = photo;
     }
 
-    public User(Date regTime, String name, String email, String password, String code) {
-        this.regTime = regTime;
-        this.name = name;
+    public User(String email, String name, String password, String captcha) {
         this.email = email;
+        this.name = name;
         this.password = password;
-        this.code = code;
+        this.isModerator = 0;
+        this.code = captcha;
+
+        setRegTime(Instant.now().toEpochMilli());
+        setRoles();
     }
+
 
     @OneToMany(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH, CascadeType.REFRESH})
     private List<Post> posts;
@@ -67,6 +74,35 @@ public class User {
 
     @OneToMany(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH, CascadeType.REFRESH})
     private List<PostVote> postVotes;
+
+    @Transient
+    private Set<Role> roles = new HashSet<>();
+
+    public long getTimestamp() {
+        return regTime.getTime() / 1000;
+    }
+
+    public void setRegTime(long timestamp) {
+        regTime = Date.from(Instant.ofEpochMilli(timestamp));
+    }
+
+    public void setRoles() {
+        roles.add(new Role(ApplicationUserRole.USER));
+        if (isModerator == 1) {
+            roles.add(new Role(ApplicationUserRole.MODERATOR));
+        }
+    }
+
+    public Set<Role> getRoles() {
+        if (roles.size() == 0) {
+            setRoles();
+        }
+        return roles;
+    }
+
+    public void setRoles(Set<Role> set) {
+        setRoles();
+    }
 
     public void setId(int id) {
         this.id = id;
@@ -106,8 +142,38 @@ public class User {
         this.email = email;
     }
 
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return getRoles();
+    }
+
     public String getPassword() {
         return password;
+    }
+
+    @Override
+    public String getUsername() {
+        return email;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
     }
 
     public void setPassword(String password) {
@@ -129,4 +195,6 @@ public class User {
     public void setPhoto(String photo) {
         this.photo = photo;
     }
+
+
 }
