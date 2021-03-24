@@ -34,10 +34,10 @@ public class PostComment {
     @Column(name = "text", columnDefinition = "TEXT NOT NULL")
     private String text;
 
-    public PostComment(int parentId, int postId, int userId, Date time, String text) {
+    public PostComment(int parentId, Post post, User user, Date time, String text) {
         this.parentId = parentId;
-        this.postId = postId;
-        this.userId = userId;
+        this.post = post;
+        this.user = user;
         this.time = time;
         this.text = text;
     }

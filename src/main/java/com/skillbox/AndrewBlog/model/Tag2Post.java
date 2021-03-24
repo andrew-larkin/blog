@@ -14,30 +14,40 @@ public class Tag2Post {
     @Column(name = "id", nullable = false, unique = true)
     private int id;
 
-    @Column(name = "post_id", nullable = false, insertable = false, updatable = false)
-    private int postId;
+    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH, CascadeType.REFRESH})
+    @JoinColumn(name = "post_id")
+    private Post post;
 
-    @Column(name = "tag_id", nullable = false, insertable = false, updatable = false)
-    private int tagId;
+    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH, CascadeType.REFRESH})
+    @JoinColumn(name = "tag_id")
+    private Tag tag;
 
-    public Tag2Post(int postId, int tagId) {
-        this.postId = postId;
-        this.tagId = tagId;
+    public Tag2Post(Post post, Tag tag) {
+        this.post = post;
+        this.tag = tag;
     }
 
-    public int getPostId() {
-        return postId;
+    public int getId() {
+        return id;
     }
 
-    public void setPostId(int postId) {
-        this.postId = postId;
+    public void setId(int id) {
+        this.id = id;
     }
 
-    public int getTagId() {
-        return tagId;
+    public Post getPost() {
+        return post;
     }
 
-    public void setTagId(int tagId) {
-        this.tagId = tagId;
+    public void setPost(Post post) {
+        this.post = post;
+    }
+
+    public Tag getTag() {
+        return tag;
+    }
+
+    public void setTag(Tag tag) {
+        this.tag = tag;
     }
 }

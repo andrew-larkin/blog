@@ -26,4 +26,7 @@ public interface PostVoteRepository extends CrudRepository<PostVote, Integer> {
     int getAmountOfDisLikes();
 
     Optional<PostVote> findByPostIdAndUserId(int post_id, int user_id);
+
+    @Query(value = "SELECT COUNT(*) FROM post_votes WHERE value = :value and user_id = :user_id", nativeQuery = true)
+    int countByUserIdValue(@Param("user_id") int userId, @Param("value") byte value);
 }

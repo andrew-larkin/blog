@@ -1,19 +1,21 @@
 USE `blogdb`;
 
 INSERT INTO `tags` (`id`, `name`) VALUES (1,"Spring");
-INSERT INTO `tags` (`name`) VALUES ("Spring Boot"), ("Flyway"), ("Hibernate"), ("Swagger");
+INSERT INTO `tags` (`name`) VALUES ("Spring Boot"), ("Flyway"), ("Hibernate"), ("Swagger"), ("JWT");
 
 INSERT INTO `users` (`id`, `is_moderator`, `reg_time`, `name`, `email`, `password`, `code`, `photo`, `application_user_role`)
-VALUES (1, 1, "2021-01-15' '19:10", "AndrewLarkin", "diesel-z@yandex.ru", "degaus787ser2", "1456", "", "MODERATOR");
+VALUES (1, 1, "2020-12-15' '19:10", "AndrewLarkin", "diesel-z@yandex.ru",
+"$2y$10$4pYGZqZC8j3/CdoaJVhicuDh1IwFuGGroirhRp/C4POCxLjyLwDgK", "1456", "", "MODERATOR");
 
 INSERT INTO `users` (`is_moderator`, `reg_time`, `name`, `email`, `password`, `code`, `photo`)
 VALUES (0, "2021-01-15' '19:20", "AlexeyPushkarev", "apushkarev@yandex.ru", "us787ser2", "", ""),
 (0, "2021-01-15' '19:30", "DenisStepashin", "astepashin@yandex.ru", "urmanga87ser2", "", ""),
 (0, "2021-01-15' '19:40", "MaxMarakanov", "mmarakanov@yandex.ru", "u551d7ser2", "", ""),
-(0, "2021-01-15' '19:41", "LeonidStepanov", "gleonov@yandex.ru", "us748ser2", "", "");
+(0, "2021-01-15' '19:41", "LeonidStepanov", "gleonov@yandex.ru", "us748ser2", "", ""),
+(1, "2021-03-16' '21:40", "AndrewPolov", "blin72305@gmail.com", "$2a$12$AaMScb1726IawUvqrB5rz.krzyMmuWfYxK3sWoGMVgkSX4LyT4gVi", "", "MODERATOR");
 
 INSERT INTO `posts` (`id`, `is_active`, `moderation_status`, `moderator_id`, `user_id`, `time`, `title`, `text`, `view_count`)
-VALUES (1, 1, "ACCEPTED", 1, 1, "2021-01-15' '19:40", "DispatcherServlet and web.xml in Spring Boot",
+VALUES (1, 1, "ACCEPTED", 1, 1, "2020-12-15' '19:40", "DispatcherServlet and web.xml in Spring Boot",
 "The DispatcherServlet is the front controller in Spring web applications.", 6);
 INSERT INTO `posts` (`is_active`, `moderation_status`, `moderator_id`, `user_id`, `time`, `title`, `text`, `view_count`)
 VALUES (1, "ACCEPTED", 1, 3, "2021-01-15' '19:57", "Rolling Back Migrations with Flyway",

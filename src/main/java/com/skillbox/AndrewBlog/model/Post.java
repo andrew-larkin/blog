@@ -117,11 +117,11 @@ public class Post {
     @Column(name = "view_count", nullable = false)
     private int viewCount;
 
-    public Post(byte isActive, ModerationStatus moderationStatus, int moderatorId, int userId, Date time, String title, String text, int viewCount) {
+    public Post(byte isActive, ModerationStatus moderationStatus, int moderatorId, User user, Date time, String title, String text, int viewCount) {
         this.isActive = isActive;
         this.moderationStatus = moderationStatus;
         this.moderatorId = moderatorId;
-        this.userId = userId;
+        this.user = user;
         this.time = time;
         this.title = title;
         this.text = text;

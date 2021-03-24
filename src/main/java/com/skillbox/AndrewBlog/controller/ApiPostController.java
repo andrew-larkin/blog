@@ -1,6 +1,7 @@
 package com.skillbox.AndrewBlog.controller;
 
 import com.skillbox.AndrewBlog.api.request.CommentRequest;
+import com.skillbox.AndrewBlog.api.request.LikeRequest;
 import com.skillbox.AndrewBlog.api.request.ModerationRequest;
 import com.skillbox.AndrewBlog.api.request.PostRequest;
 import com.skillbox.AndrewBlog.service.PostService;
@@ -78,7 +79,7 @@ public class ApiPostController {
 	}
 
 	//@Secured("USER")
-	@PutMapping("/api/post/{ID}")
+	@PutMapping("/api/post/{id}")
 	private ResponseEntity<?> putApiPost(@PathVariable int id,
 										   @RequestBody PostRequest postRequest) {
 		return postService.putApiPost(id, postRequest);
@@ -97,9 +98,9 @@ public class ApiPostController {
 	}
 
 	//@Secured(USER)
-	@PostMapping("/api/post/like/{id}")
-	private ResponseEntity<?> postApiPostLike(@PathVariable(name = "id") int postId) {
-		return postService.postApiPostLike(postId);
+	@PostMapping("/api/post/like")
+	private ResponseEntity<?> postApiPostLike(@RequestBody LikeRequest likeRequest) {
+		return postService.postApiPostLike(likeRequest);
 	}
 
 	//@Secured(USER)

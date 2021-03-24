@@ -2,26 +2,26 @@ package com.skillbox.AndrewBlog.api.response;
 
 public class StatisticResponse {
 
-    private int postCount;
+    private int postsCount;
     private int likesCount;
-    private int dislikeCount;
-    private int viewCount;
+    private int dislikesCount;
+    private int viewsCount;
     private long firstPublication;
 
-    public StatisticResponse(int postCount, int likesCount, int dislikeCount, int viewCount, long firstPublication) {
-        this.postCount = postCount;
+    public StatisticResponse(int postsCount, int likesCount, int dislikesCount, int viewsCount, long firstPublication) {
+        this.postsCount = postsCount;
         this.likesCount = likesCount;
-        this.dislikeCount = dislikeCount;
-        this.viewCount = viewCount;
+        this.dislikesCount = dislikesCount;
+        this.viewsCount = viewsCount;
         this.firstPublication = firstPublication;
     }
 
-    public int getPostCount() {
-        return postCount;
+    public int getPostsCount() {
+        return postsCount;
     }
 
-    public void setPostCount(int postCount) {
-        this.postCount = postCount;
+    public void setPostsCount(int postsCount) {
+        this.postsCount = postsCount;
     }
 
     public int getLikesCount() {
@@ -32,20 +32,20 @@ public class StatisticResponse {
         this.likesCount = likesCount;
     }
 
-    public int getDislikeCount() {
-        return dislikeCount;
+    public int getDislikesCount() {
+        return dislikesCount;
     }
 
-    public void setDislikeCount(int dislikeCount) {
-        this.dislikeCount = dislikeCount;
+    public void setDislikesCount(int dislikesCount) {
+        this.dislikesCount = dislikesCount;
     }
 
-    public int getViewCount() {
-        return viewCount;
+    public int getViewsCount() {
+        return viewsCount;
     }
 
-    public void setViewCount(int viewCount) {
-        this.viewCount = viewCount;
+    public void setViewsCount(int viewsCount) {
+        this.viewsCount = viewsCount;
     }
 
     public long getFirstPublication() {

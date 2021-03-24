@@ -17,4 +17,5 @@ public interface Tag2PostRepository extends CrudRepository<Tag2Post, Integer> {
     @Query(value = "select tag_id from tag2post where post_id = :post_id", nativeQuery = true)
     List<Integer> getTagIdByPostId(@Param("post_id") int postId);
 
+    List<Tag2Post> findByPostId(int postId);
 }

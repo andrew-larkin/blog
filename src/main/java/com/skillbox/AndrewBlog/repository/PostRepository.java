@@ -1,5 +1,6 @@
 package com.skillbox.AndrewBlog.repository;
 
+import com.skillbox.AndrewBlog.model.CaptchaCode;
 import com.skillbox.AndrewBlog.model.ModerationStatus;
 import com.skillbox.AndrewBlog.model.Post;
 import org.springframework.data.domain.Pageable;
@@ -23,16 +24,16 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
 
     @Query(value = "SELECT posts.id, posts.is_active, posts.moderation_status, posts.moderator_id, " +
             "posts.text, posts.time, posts.title, posts.user_id, posts.view_count FROM posts, post_votes " +
-            "where posts.is_active=1 and posts.moderation_status='ACCEPTED' and post_votes.value > 0 " +
-            "and posts.id = post_votes.post_id group by posts.id and posts.time<now()" +
-            "order by count(post_votes.value) desc", nativeQuery = true)
+            "where posts.is_active=1 and posts.moderation_status='ACCEPTED' and posts.time<now()" +
+            "group by posts.id " +
+            "order by count(post_votes.value)", nativeQuery = true)
     List<Post> bestPost(Pageable pageable);
 
     @Query(value = "SELECT posts.id, posts.is_active, posts.moderation_status, posts.moderator_id, " +
             "posts.text, posts.time, posts.title, posts.user_id, posts.view_count FROM posts, post_comments " +
             "where posts.is_active=1 and posts.moderation_status='ACCEPTED' " +
-            "and posts.id = post_comments.post_id and posts.time<now() group by posts.id " +
-            "order by count(post_comments.user_id) desc", nativeQuery = true)
+            "and posts.time<now() group by posts.id " +
+            "order by count(post_comments.user_id)", nativeQuery = true)
     List<Post> popularPost(Pageable pageable);
 
     @Query(value = "select * from posts where posts.is_active=1 and posts.moderation_status='ACCEPTED' " +
@@ -110,4 +111,43 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
             "moderation_status = 'ACCEPTED' and date(time) <= now() " +
             "and year(time) = :time group by date(time)", nativeQuery = true)
     List<String> getDatesWithActivePostsByYear(@Param("time") Integer year);
+
+
+    Optional<Post> findByTitle(String title);
+
+    @Query(value = "select * from posts where is_active = 0 and " +
+            "user_id = :user_id" , nativeQuery = true)
+    List<Post> myInactivePosts(@Param("user_id") int id, Pageable pageable);
+
+    @Query(value = "select * from posts where is_active = 1 and " +
+            "moderation_status = 'NEW' and user_id = :user_id", nativeQuery = true)
+    List<Post> myPendingPosts(@Param("user_id") int id, Pageable pageable);
+
+    @Query(value = "select * from posts where is_active = 1 and " +
+            "moderation_status = 'DECLINED' and user_id = :user_id", nativeQuery = true)
+    List<Post> myDeclinedPosts(@Param("user_id") int id, Pageable pageable);
+
+    @Query(value = "select * from posts where is_active = 1 and " +
+            "moderation_status = 'ACCEPTED' and user_id = :user_id", nativeQuery = true)
+    List<Post> myPublishedPosts(@Param("user_id") int id, Pageable pageable);
+
+    int countByUserId(int userId);
+
+    @Query(value = "select sum(view_count) from posts where user_id = :user_id", nativeQuery = true)
+    int countAllViews(@Param("user_id") int id);
+
+    @Query(value = "select time from posts where user_id = :user_id order by id limit 1", nativeQuery = true)
+    Date getMyDateOfFirstPublication(@Param("user_id") int id);
+
+    @Query(value = "select * from posts where moderation_status = 'NEW' " +
+            "and is_active = 1", nativeQuery = true)
+    List<Post> moderationNewPosts(Pageable pageable);
+
+    @Query(value = "select * from posts where moderation_status = 'DECLINED' " +
+            "and is_active = 1 and moderator_id = :moderator_id", nativeQuery = true)
+    List<Post> moderationDeclinedPosts(@Param("moderator_id") int moderator_id, Pageable pageable);
+
+    @Query(value = "select * from posts where moderation_status = 'ACCEPTED' " +
+            "and is_active = 1 and moderator_id = :moderator_id", nativeQuery = true)
+    List<Post> moderationAcceptedPosts(@Param("moderator_id") int moderator_id, Pageable pageable);
 }

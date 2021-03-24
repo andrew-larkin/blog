@@ -1,7 +1,10 @@
 package com.skillbox.AndrewBlog.api.request;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class EmailRequest {
 
+    @JsonProperty(value = "email")
     private String email;
 
     public EmailRequest(String email) {

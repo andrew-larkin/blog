@@ -75,8 +75,8 @@ public class ApiGeneralController {
 
     //@Secured("MODERATOR")
     @PutMapping("/settings")
-    private ResponseEntity<?> putApiSettings(@RequestParam SettingsRequest settingsRequest) {
-        return settingsService.putApiSettings(settingsRequest);
+    private void putApiSettings(@RequestParam SettingsRequest settingsRequest) {
+        settingsService.putApiSettings(settingsRequest);
     }
 
 }

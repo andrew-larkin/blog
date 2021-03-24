@@ -1,13 +1,11 @@
 package com.skillbox.AndrewBlog.service;
 
 import com.skillbox.AndrewBlog.api.request.CommentRequest;
+import com.skillbox.AndrewBlog.api.request.LikeRequest;
 import com.skillbox.AndrewBlog.api.request.ModerationRequest;
 import com.skillbox.AndrewBlog.api.request.PostRequest;
 import com.skillbox.AndrewBlog.api.response.*;
-import com.skillbox.AndrewBlog.model.Post;
-import com.skillbox.AndrewBlog.model.PostComment;
-import com.skillbox.AndrewBlog.model.PostVote;
-import com.skillbox.AndrewBlog.model.User;
+import com.skillbox.AndrewBlog.model.*;
 import com.skillbox.AndrewBlog.repository.*;
 import com.skillbox.AndrewBlog.security.PersonDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,13 +13,12 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class PostService {
@@ -178,11 +175,94 @@ public class PostService {
     }
 
     public ResponseEntity<?> getApiPostModeration(int offset, int limit, String status) {
-        return ResponseEntity.status(200).body("заглушка");
+
+        StringBuilder errors = new StringBuilder();
+        if (offset < 0) {
+            errors.append("'offset' should be equal or greater than 0. ");
+        }
+        if (limit <= 0) {
+            errors.append("'limit' should be greater than 0. ");
+        }
+        if (!errors.toString().equals("")) {
+            return ResponseEntity.status(200).body(new ErrorDescriptionResponse(errors.toString().trim()));
+        }
+        User user = userRepository.getUserByEmail(personDetailsService.getCurrentUser()
+                .getEmail()).orElseThrow(() ->
+                new UsernameNotFoundException(String.format("user with email %s not found",
+                        personDetailsService.getCurrentUser().getEmail()))
+        );
+
+        if (user.getIsModerator() != isActive) {
+            return ResponseEntity.status(403).body("");
+        }
+
+        Pageable pageable = PageRequest.of(offset, limit);
+
+        List<Post> postList;
+        switch (status) {
+            case "new":
+                postList = postRepository.moderationNewPosts(pageable);
+                break;
+            case "declined":
+                postList = postRepository.moderationDeclinedPosts(user.getId(), pageable);
+                break;
+            case "accepted":
+                postList = postRepository.moderationAcceptedPosts(user.getId(), pageable);
+                break;
+            default:
+                postList = new ArrayList<>();
+        }
+
+        return ResponseEntity.status(HttpStatus.OK).body(new CountPostsResponse(
+                postList.size(),
+                getPostResponseListByPosts(postList)
+        ));
+
     }
 
     public ResponseEntity<?> getApiPostMy(int offset, int limit, String status) {
-        return ResponseEntity.status(200).body("заглушка");
+
+        StringBuilder errors = new StringBuilder();
+        if (offset < 0) {
+            errors.append("'offset' should be equal or greater than 0. ");
+        }
+        if (limit <= 0) {
+            errors.append("'limit' should be greater than 0. ");
+        }
+        if (!errors.toString().equals("")) {
+            return ResponseEntity.status(200).body(new ErrorDescriptionResponse(errors.toString().trim()));
+        }
+
+        User user = userRepository.getUserByEmail(personDetailsService.getCurrentUser()
+                .getEmail()).orElseThrow(() ->
+                new UsernameNotFoundException(String.format("user with email %s not found",
+                        personDetailsService.getCurrentUser().getEmail()))
+        );
+
+        Pageable pageable = PageRequest.of(offset, limit);
+
+        List<Post> postList;
+        switch (status) {
+            case "inactive":
+                postList = postRepository.myInactivePosts(user.getId(), pageable);
+                break;
+            case "pending":
+                postList = postRepository.myPendingPosts(user.getId(), pageable);
+                break;
+            case "declined":
+                postList = postRepository.myDeclinedPosts(user.getId(), pageable);
+                break;
+            case "published":
+                postList = postRepository.myPublishedPosts(user.getId(), pageable);
+                break;
+            default:
+                postList = new ArrayList<>();
+        }
+
+        return ResponseEntity.status(HttpStatus.OK).body(new CountPostsResponse(
+                postList.size(),
+                getPostResponseListByPosts(postList)
+        ));
     }
 
         public ResponseEntity<?> getApiPostId(int id) {
@@ -221,36 +301,209 @@ public class PostService {
     }
 
     public ResponseEntity<?> postApiPost(PostRequest postRequest) {
-        return ResponseEntity.status(200).body("заглушка");
+
+        User user = userRepository.getUserByEmail(personDetailsService.getCurrentUser()
+                .getEmail()).orElseThrow(() ->
+                        new UsernameNotFoundException(String.format("user with email %s not found",
+                                personDetailsService.getCurrentUser().getEmail()))
+        );
+
+        Map<String, String> errors = new HashMap<>();
+        if (postRequest.getTitle().length() < 3) {
+            errors.put("title: ", "title of the post can not be empty and should contain more then 3 symbols ");
+        }
+        if (postRequest.getText().length() < 50) {
+            errors.put("text: ", "text of the post can not be empty and should contain more then 50 symbols ");
+        }
+        if (postRepository.findByTitle(postRequest.getTitle()).isPresent()) {
+            errors.put("post: ", "post with the same title already exists ");
+        }
+
+        if (errors.size() != 0) {
+            return ResponseEntity.status(200).body(new ResultErrorsResponse(
+                    false,
+                    errors));
+        }
+
+        Post post = new Post(
+            isActive,
+            user.getIsModerator() == isActive ? ModerationStatus.ACCEPTED : ModerationStatus.NEW,
+            user.getIsModerator() == isActive ? user.getId() : 0,
+            user,
+            postRequest.getTimestamp() < System.currentTimeMillis() ? new Date(System.currentTimeMillis())
+                    : new Date(postRequest.getTimestamp()),
+            postRequest.getTitle(),
+            postRequest.getText(),
+            0
+        );
+
+        Post newPost = postRepository.save(post);
+
+        for (int i = 0; i < postRequest.getTags().size(); i++) {
+            if (tagsRepository.getTagByName(postRequest.getTags().get(i)).isEmpty()) {
+                Tag newTag = tagsRepository.save(new Tag(postRequest.getTags().get(i)));
+                tag2PostRepository.save(new Tag2Post(newPost,
+                        newTag));
+            } else {
+                Tag existedTag = tagsRepository.getTagByName(postRequest.getTags().get(i)).get(0);
+                tag2PostRepository.save(new Tag2Post(newPost,
+                        existedTag));
+            }
+        }
+
+        return ResponseEntity.status(200).body(new ResultResponse(
+                true
+        ));
     }
 
     public ResponseEntity<?> putApiPost(int id, PostRequest postRequest) {
-        return ResponseEntity.status(200).body("заглушка");
+        User user = userRepository.getUserByEmail(personDetailsService.getCurrentUser()
+                .getEmail()).orElseThrow(() ->
+                new UsernameNotFoundException(String.format("user with email %s not found",
+                        personDetailsService.getCurrentUser().getEmail()))
+        );
+
+        Map<String, String> errors = new HashMap<>();
+        if (postRequest.getTitle().length() < 3) {
+            errors.put("title: ", "title of the post can not be empty and should contain more then 3 symbols ");
+        }
+        if (postRequest.getText().length() < 50) {
+            errors.put("text: ", "text of the post can not be empty and should contain more then 50 symbols ");
+        }
+        if (postRepository.findById(id).isEmpty()) {
+            errors.put("post: ", "post is not found ");
+        }
+
+        if (postRepository.findById(id).get().getUser().getId() != user.getId()) {
+            if (userRepository.findByEmail(user.getEmail()).get().getIsModerator() != isActive) {
+                errors.put("user: ", "you do not have the rights to update this post ");
+        }
+
+        }
+
+        if (errors.size() != 0) {
+            return ResponseEntity.status(200).body(new ResultErrorsResponse(
+                    false,
+                    errors));
+        }
+
+        Post postToUpdate = postRepository.findById(id).orElseThrow(() ->
+               new RuntimeException("post with actual ID is not found")
+        );
+
+        postToUpdate.setModerationStatus(postRepository.findById(id).get().getUser().getId() == user.getId()
+                ? ModerationStatus.NEW : postToUpdate.getModerationStatus());
+        postToUpdate.setTime(postRequest.getTimestamp() < System.currentTimeMillis()
+                ? new Date(System.currentTimeMillis())
+                : new Date(postRequest.getTimestamp()));
+        postToUpdate.setTitle(postRequest.getTitle());
+        postToUpdate.setText(postRequest.getText());
+
+        postRepository.save(postToUpdate);
+
+        Set<String> oldTags = tag2PostRepository.findByPostId(id).stream()
+                .map(n -> n.getTag().getName())
+                .collect(Collectors.toSet());
+
+        for (int i = 0; i < postRequest.getTags().size(); i++) {
+            if (!oldTags.contains(postRequest.getTags().get(i))) {
+                Tag existedTag = tagsRepository.getTagByName(postRequest.getTags().get(i)).get(0);
+                tag2PostRepository.save(new Tag2Post(postToUpdate,
+                        existedTag));
+            }
+        }
+
+        return ResponseEntity.status(200).body(new ResultResponse(
+                true
+        ));
     }
 
     public ResponseEntity<?> postApiComment(CommentRequest commentRequest) {
-        return ResponseEntity.status(200).body("заглушка");
+
+        User user = userRepository.getUserByEmail(personDetailsService.getCurrentUser()
+                .getEmail()).orElseThrow(() ->
+                new UsernameNotFoundException(String.format("user with email %s not found",
+                        personDetailsService.getCurrentUser().getEmail()))
+        );
+
+        Map<String, String> errors = new HashMap<>();
+        if (commentRequest.getParentId() != 0) {
+            if (postCommentRepository
+                    .findById(commentRequest.getParentId()).isEmpty()) {
+                errors.put("parent_id: ", "No such parent_id");
+        }
+        }
+        if (postRepository.findById(commentRequest.getPostId()).isEmpty()) {
+            errors.put("post: ", "post is not found");
+        }
+        if (commentRequest.getText().length() < 3) {
+            errors.put("text: ", "text of the comment should contain more 2 symbols");
+        }
+
+        if (errors.size() != 0) {
+            return ResponseEntity.status(400).body(new ResultErrorsResponse(
+                    false,
+                    errors));
+        }
+
+        PostComment newComment = postCommentRepository.save(new PostComment(
+                commentRequest.getParentId(),
+                postRepository.findById(commentRequest.getPostId()).get(),
+                userRepository.findByEmail(user.getEmail()).get(),
+                new Date(System.currentTimeMillis()),
+                commentRequest.getText()
+        ));
+
+        return ResponseEntity.status(200).body(new IdResponse(
+                newComment.getId()
+        ));
     }
 
     public ResponseEntity<?> postApiModeration(ModerationRequest moderationRequest) {
-        return ResponseEntity.status(200).body("заглушка");
+
+        User user = userRepository.getUserByEmail(personDetailsService.getCurrentUser()
+                .getEmail()).orElseThrow(() ->
+                new UsernameNotFoundException(String.format("user with email %s not found",
+                        personDetailsService.getCurrentUser().getEmail()))
+        );
+
+        if (user.getIsModerator() != isActive) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(false);
+        }
+
+        Post post = postRepository.findById(moderationRequest.getPostId()).get();
+        post.setModeratorId(user.getId());
+        post.setModerationStatus(
+                moderationRequest.getDecision().equals("accept")
+                        ? ModerationStatus.ACCEPTED : ModerationStatus.DECLINED);
+
+        postRepository.save(post);
+
+        return ResponseEntity.status(200).body(new ResultResponse(
+                true
+        ));
     }
 
-    public ResponseEntity<?> postApiPostLike(int postId) {
+    public ResponseEntity<?> postApiPostLike(LikeRequest likeRequest) {
 
         final byte LIKE = 1;
 
-        User user = personDetailsService.getCurrentUser();
-        if (postVoteRepository.findByPostIdAndUserId(postId, user.getId()).isEmpty()) {
+        User user = userRepository.getUserByEmail(personDetailsService.getCurrentUser()
+                .getEmail()).orElseThrow(() ->
+                new UsernameNotFoundException(String.format("user with email %s not found",
+                        personDetailsService.getCurrentUser().getEmail()))
+        );
+
+        if (postVoteRepository.findByPostIdAndUserId(likeRequest.getPostId(), user.getId()).isEmpty()) {
             postVoteRepository.save(new PostVote(
                     user.getId(),
-                    postId,
+                    likeRequest.getPostId(),
                     new Date(System.currentTimeMillis()),
                     LIKE
             ));
             return ResponseEntity.status(200).body(new ResultResponse(true));
-        } else if (postVoteRepository.findByPostIdAndUserId(postId, user.getId()).get().getValue() != LIKE) {
-            PostVote changePostVote = postVoteRepository.findByPostIdAndUserId(postId, user.getId()).get();
+        } else if (postVoteRepository.findByPostIdAndUserId(likeRequest.getPostId(), user.getId()).get().getValue() != LIKE) {
+            PostVote changePostVote = postVoteRepository.findByPostIdAndUserId(likeRequest.getPostId(), user.getId()).get();
             changePostVote.setValue(LIKE);
             postVoteRepository.save(changePostVote);
             return ResponseEntity.status(200).body(new ResultResponse(true));

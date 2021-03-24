@@ -10,10 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 @Controller
 @RequestMapping("/api/auth")
@@ -49,8 +46,8 @@ public class ApiAuthController {
     }
 
     @PostMapping("/restore")
-    private ResponseEntity<?> postApiAuthRestore(@RequestBody EmailRequest emailRequest) {
-        return authService.postApiAuthRestore(emailRequest);
+    private ResponseEntity<?> postApiAuthRestore(@RequestParam(value = "email") String email) {
+        return authService.postApiAuthRestore(email);
     }
 
     @PostMapping("/password")

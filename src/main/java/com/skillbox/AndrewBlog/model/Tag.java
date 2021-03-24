@@ -45,4 +45,6 @@ public class Tag {
             inverseJoinColumns = @JoinColumn(name = "post_id")
     )
     private List<Post> posts;
+
+
 }

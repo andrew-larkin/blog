@@ -27,6 +27,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import javax.mail.internet.MimeMessage;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -136,14 +137,14 @@ public class AuthService {
     }
 
 
-    public ResponseEntity<?> postApiAuthRestore (EmailRequest emailRequest) {
-        if (userRepository.getUserByEmail(emailRequest.getEmail()).isEmpty()) {
+    public ResponseEntity<?> postApiAuthRestore (String emailRequest) {
+        if (userRepository.getUserByEmail(emailRequest).isEmpty()) {
             return ResponseEntity.status(HttpStatus.OK).body(new ResultResponse(
                     false
             ));
         }
         String hash = generateCaptchaCode(20);
-        User user = userRepository.getUserByEmail(emailRequest.getEmail()).get();
+        User user = userRepository.getUserByEmail(emailRequest).get();
         user.setCode(hash);
         userRepository.save(user);
 
