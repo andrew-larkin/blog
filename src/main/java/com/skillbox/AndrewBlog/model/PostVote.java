@@ -9,19 +9,16 @@ import java.util.Date;
 @Table(name = "post_votes")
 public class PostVote {
 
-    public PostVote() {
-    }
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false, unique = true)
     private int id;
 
-    @Column(name = "user_id", nullable = false, insertable = false, updatable = false)
+   /* @Column(name = "user_id", nullable = false, insertable = false, updatable = false)
     private int userId;
 
     @Column(name = "post_id", nullable = false, insertable = false, updatable = false)
-    private int postId;
+    private int postId;*/
 
     @JsonFormat(pattern = "yyyy-MM-dd' 'HH:mm")
     @Column(name = "time", columnDefinition = "DATETIME NOT NULL")
@@ -30,12 +27,6 @@ public class PostVote {
     @Column(name = "value", columnDefinition = "TINYINT NOT NULL")
     private byte value;
 
-    public PostVote(int userId, int postId, Date time, byte value) {
-        this.userId = userId;
-        this.postId = postId;
-        this.time = time;
-        this.value = value;
-    }
 
     @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH, CascadeType.REFRESH})
     @JoinColumn(name = "user_id")
@@ -45,20 +36,22 @@ public class PostVote {
     @JoinColumn(name = "post_id")
     private Post post;
 
-    public int getUserId() {
-        return userId;
+    public PostVote(Date time, byte value, User user, Post post) {
+        this.time = time;
+        this.value = value;
+        this.user = user;
+        this.post = post;
     }
 
-    public void setUserId(int userId) {
-        this.userId = userId;
+    public PostVote() {
     }
 
-    public int getPostId() {
-        return postId;
+    public int getId() {
+        return id;
     }
 
-    public void setPostId(int postId) {
-        this.postId = postId;
+    public void setId(int id) {
+        this.id = id;
     }
 
     public Date getTime() {
@@ -75,5 +68,21 @@ public class PostVote {
 
     public void setValue(byte value) {
         this.value = value;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public Post getPost() {
+        return post;
+    }
+
+    public void setPost(Post post) {
+        this.post = post;
     }
 }

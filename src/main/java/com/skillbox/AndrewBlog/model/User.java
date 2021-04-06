@@ -54,6 +54,14 @@ public class User implements UserDetails {
         this.photo = photo;
     }
 
+    public User(int id, byte isModerator, Date regTime, String name, String email) {
+        this.id = id;
+        this.isModerator = isModerator;
+        this.regTime = regTime;
+        this.name = name;
+        this.email = email;
+    }
+
     public User(String email, String name, String password, String captcha) {
         this.email = email;
         this.name = name;

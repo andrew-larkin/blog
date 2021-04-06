@@ -2,7 +2,7 @@ package com.skillbox.AndrewBlog.api.response;
 
 public class PostEntityResponse {
 
-    private long id;
+    private int id;
     private long timestamp;
     private IdNameResponse user;
     private String title;
@@ -12,7 +12,7 @@ public class PostEntityResponse {
     private int commentCount;
     private int viewCount;
 
-    public PostEntityResponse(long id, long timestamp, IdNameResponse user, String title, String announce, int likeCount, int dislikeCount, int commentCount, int viewCount) {
+    public PostEntityResponse(int id, long timestamp, IdNameResponse user, String title, String announce, int likeCount, int dislikeCount, int commentCount, int viewCount) {
         this.id = id;
         this.timestamp = timestamp;
         this.user = user;
@@ -24,14 +24,11 @@ public class PostEntityResponse {
         this.viewCount = viewCount;
     }
 
-    public PostEntityResponse() {
-    }
-
-    public long getId() {
+    public int getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(int id) {
         this.id = id;
     }
 

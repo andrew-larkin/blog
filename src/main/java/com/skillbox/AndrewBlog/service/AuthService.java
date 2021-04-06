@@ -3,7 +3,6 @@ package com.skillbox.AndrewBlog.service;
 import com.github.cage.Cage;
 import com.github.cage.image.Painter;
 import com.skillbox.AndrewBlog.api.request.EmailRequest;
-import com.skillbox.AndrewBlog.api.request.LoginRequest;
 import com.skillbox.AndrewBlog.api.request.PasswordRequest;
 import com.skillbox.AndrewBlog.api.request.RegisterRequest;
 import com.skillbox.AndrewBlog.api.response.*;
@@ -16,18 +15,17 @@ import com.skillbox.AndrewBlog.repository.SettingsRepository;
 import com.skillbox.AndrewBlog.repository.UserRepository;
 import com.skillbox.AndrewBlog.security.PersonDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import javax.mail.internet.MimeMessage;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -35,24 +33,26 @@ import java.util.regex.Pattern;
 @Service
 public class AuthService {
 
+    @Value("$location.host")
+    private String applicationHost;
+
     private final CaptchaRepository captchaRepository;
     private final UserRepository userRepository;
     private final PostRepository postRepository;
-    private final MailSender mailSender;
+    private final JavaMailSender emailSender;
     private BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
     private final PersonDetailsService personDetailsService;
     private final SettingsRepository settingsRepository;
 
     @Autowired
     public AuthService(CaptchaRepository captchaRepository, UserRepository userRepository,
-                       PostRepository postRepository, MailSender mailSender,
-                       //BCryptPasswordEncoder bCryptPasswordEncoder,
+                       PostRepository postRepository,
+                       JavaMailSender emailSender,
                        PersonDetailsService personDetailsService, SettingsRepository settingsRepository) {
         this.captchaRepository = captchaRepository;
         this.userRepository = userRepository;
         this.postRepository = postRepository;
-        this.mailSender = mailSender;
-        //this.bCryptPasswordEncoder = bCryptPasswordEncoder;
+        this.emailSender = emailSender;
         this.personDetailsService = personDetailsService;
         this.settingsRepository = settingsRepository;
     }
@@ -94,6 +94,11 @@ public class AuthService {
 
         Map<String, String> errors = new HashMap<>();
 
+        if (settingsRepository.findById(1).get().getValue().toLowerCase().equals("no")) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResultResponse(
+                    false
+            ));
+        } else
         if (!getEmailCorrect(registerRequest.getEmail()).equals(registerRequest.getEmail())) {
             errors.put("email", getEmailCorrect(registerRequest.getEmail()));
             return ResponseEntity.status(HttpStatus.OK).body(new ResultErrorsResponse(
@@ -115,8 +120,8 @@ public class AuthService {
                     errors
             ));
         } else
-        if (!getCaptchaCorrect(registerRequest).equals(registerRequest.getCaptcha())) {
-            errors.put("captcha", getCaptchaCorrect(registerRequest));
+        if (!getCaptchaCorrect(registerRequest.getCaptcha()).equals(registerRequest.getCaptcha())) {
+            errors.put("captcha", getCaptchaCorrect(registerRequest.getCaptcha()));
             return ResponseEntity.status(HttpStatus.OK).body(new ResultErrorsResponse(
                     false,
                     errors
@@ -137,22 +142,26 @@ public class AuthService {
     }
 
 
-    public ResponseEntity<?> postApiAuthRestore (String emailRequest) {
-        if (userRepository.getUserByEmail(emailRequest).isEmpty()) {
+    public ResponseEntity<?> postApiAuthRestore (EmailRequest emailRequest) {
+        if (userRepository.getUserByEmail(emailRequest.getEmail()).isEmpty()) {
             return ResponseEntity.status(HttpStatus.OK).body(new ResultResponse(
                     false
             ));
         }
-        String hash = generateCaptchaCode(20);
-        User user = userRepository.getUserByEmail(emailRequest).get();
+        String hash = generateCaptchaCode(10);
+
+        User user = userRepository.getUserByEmail(emailRequest.getEmail()).get();
         user.setCode(hash);
         userRepository.save(user);
 
-        String message = String.format("Hello, %s!\n" +
-               "Visit next link to restore your password: http://localhost:8080/login/change-password/%s",
-                user.getName(),
-                user.getCode());
-        mailSender.send(user.getEmail(), "Activation code", message);
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(emailRequest.getEmail());
+        message.setSubject("Activation code");
+        message.setText("Hello, " + user.getName() + " " +
+                "Visit next link to restore your password: http://localhost:8080/login/change-password/" +
+                hash);
+        emailSender.send(message);
+
 
         return ResponseEntity.status(HttpStatus.OK).body(new ResultResponse(
                 true
@@ -189,6 +198,9 @@ public class AuthService {
             ));
         } else {
 
+            user.setPassword(bCryptPasswordEncoder.encode(passwordRequest.getPassword()));
+            userRepository.save(user);
+
                 return ResponseEntity.status(HttpStatus.OK).body(new ResultResponse(
                                 true
                         )
@@ -212,17 +224,15 @@ public class AuthService {
 
     }
 
-    private String getCaptchaCorrect(RegisterRequest registerRequest) {
-        if (captchaRepository.findSecretCodeByCode(registerRequest.getCaptcha())
-                .get().getSecretCode().equals(registerRequest.getCaptchaSecret())) {
-            return registerRequest.getCaptcha();
+    private String getCaptchaCorrect(String captcha) {
+        if (captchaRepository.getSecretCodeByCode(captcha).isPresent()) {
+            return captcha;
         }
         return "Код с картинки введен неверно";
     }
 
     private String getCaptchaCorrect(PasswordRequest passwordRequest) {
-        if (captchaRepository.findSecretCodeByCode(passwordRequest.getCaptcha())
-                .get().getSecretCode().equals(passwordRequest.getCaptchaSecret())) {
+        if (captchaRepository.getSecretCodeByCode(passwordRequest.getCaptcha()).isPresent()) {
             return passwordRequest.getCaptcha();
         }
         return "Код с картинки введен неверно";
@@ -237,7 +247,7 @@ public class AuthService {
 
         while (captchaBuffer.length() < captchaLength) {
             int index = (int) (random.nextFloat() * captcha.length());
-            captchaBuffer.append(captcha.substring(index, index+1));
+            captchaBuffer.append(captcha.substring(index, index + 1));
         }
         return captchaBuffer.toString();
     }
@@ -266,5 +276,6 @@ public class AuthService {
                 );
 
     }
+
 
 }

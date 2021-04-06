@@ -1,5 +1,6 @@
 package com.skillbox.AndrewBlog.controller;
 
+import com.skillbox.AndrewBlog.api.request.ProfileRequest;
 import com.skillbox.AndrewBlog.api.request.SettingsRequest;
 import com.skillbox.AndrewBlog.api.response.InitResponse;
 import com.skillbox.AndrewBlog.service.*;
@@ -8,6 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/api")
@@ -46,9 +49,14 @@ public class ApiGeneralController {
         return tagsService.getApiTag(query);
     }
 
+    @GetMapping(value = "/calendar", consumes = "application/json")
+    private ResponseEntity<?> getApiCalendar(@RequestParam int year) {
+        return calendarService.getApiCalendarWithYear(year);
+    }
+
     @GetMapping("/calendar")
-    private ResponseEntity<?> getApiCalendar(@RequestParam(required = false) Integer year) {
-        return calendarService.getApiCalendar(year);
+    private ResponseEntity<?> getApiCalendar() {
+        return calendarService.getApiCalendarAllYears();
     }
 
     @GetMapping("/statistics/all")
@@ -57,14 +65,19 @@ public class ApiGeneralController {
     }
 
     //@Secured("USER")
-    @PostMapping("/profile/my")
+    @PostMapping(value = "/profile/my", consumes = "multipart/form-data")
     private ResponseEntity<?> postApiProfileMy(@RequestParam(required = false) MultipartFile photo,
                                                @RequestParam(required = false) String name,
                                                @RequestParam(required = false) String email,
                                                @RequestParam(required = false) String password,
-                                               @RequestParam(required = false) byte removePhoto) {
+                                               @RequestParam(required = false) byte removePhoto) throws Exception {
         return profileService.postApiProfileMy(photo, name, email,
                 password, removePhoto);
+    }
+
+    @PostMapping("profile/my")
+    private ResponseEntity<?> postApiProfileMy(@RequestBody ProfileRequest profileRequest) {
+        return profileService.postApiProfileMyWithoutPhoto(profileRequest);
     }
 
     //@Secured("USER")
@@ -75,8 +88,10 @@ public class ApiGeneralController {
 
     //@Secured("MODERATOR")
     @PutMapping("/settings")
-    private void putApiSettings(@RequestParam SettingsRequest settingsRequest) {
+    private void putApiSettings(@RequestBody SettingsRequest settingsRequest) {
         settingsService.putApiSettings(settingsRequest);
     }
+
+
 
 }

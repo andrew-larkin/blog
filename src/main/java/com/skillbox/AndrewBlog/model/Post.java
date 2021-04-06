@@ -128,6 +128,11 @@ public class Post {
         this.viewCount = viewCount;
     }
 
+    public Post(int id, User user) {
+        this.id = id;
+        this.user = user;
+    }
+
     @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH, CascadeType.REFRESH})
     @JoinColumn(name = "user_id")
     private User user;

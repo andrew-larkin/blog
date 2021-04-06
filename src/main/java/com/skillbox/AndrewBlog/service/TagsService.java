@@ -3,6 +3,7 @@ package com.skillbox.AndrewBlog.service;
 import com.skillbox.AndrewBlog.api.response.ErrorDescriptionResponse;
 import com.skillbox.AndrewBlog.api.response.NameWeightResponse;
 import com.skillbox.AndrewBlog.api.response.TagsResponse;
+import com.skillbox.AndrewBlog.model.ModerationStatus;
 import com.skillbox.AndrewBlog.model.Tag;
 import com.skillbox.AndrewBlog.repository.PostRepository;
 import com.skillbox.AndrewBlog.repository.Tag2PostRepository;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class TagsService {
@@ -32,16 +34,6 @@ public class TagsService {
     }
 
     public ResponseEntity<?> getApiTag(String query) {
-
-        if (query != null) {
-            StringBuilder errors = new StringBuilder();
-            getQueryCheck(query, errors);
-
-            if (!errors.toString().equals("")) {
-                return ResponseEntity.status(200).body(new ErrorDescriptionResponse(errors.toString().trim()));
-            }
-        }
-
         return ResponseEntity.status(HttpStatus.OK).body(new TagsResponse(
                 getNameWeightResponseList(query)
         ));
@@ -50,14 +42,15 @@ public class TagsService {
 
     private List<NameWeightResponse> getNameWeightResponseList(String query) {
         List<NameWeightResponse> nameWeightResponseList = new ArrayList<>();
-        List<Tag> tags;
+        List<String> tags;
         if (query == null || query.equals("")) {
-            tags = tagsRepository.getAllTags();
+            tags = tag2PostRepository.getUsableTags();
         } else {
-            tags = tagsRepository.getTagByName(query);
+            tags = new ArrayList<>();
+            tags.add(query);
         }
-        for (Tag tag : tags) {
-            nameWeightResponseList.add(getNameWeightResponse(tag));
+        for (String tag : tags) {
+            nameWeightResponseList.add(getNameWeightResponse(tagsRepository.findByName(tag).get()));
         }
         return nameWeightResponseList;
     }
@@ -65,22 +58,11 @@ public class TagsService {
     private NameWeightResponse getNameWeightResponse(Tag tag) {
         return new NameWeightResponse(
                 tag.getName(),
-                new DecimalFormat("#0.000").format((double) tag2PostRepository
-                        .getAmountOfTagByTagId(tag.getId())/postRepository.getAmountOfPosts()
-        ));
+                        1/((double)tag2PostRepository.getMaxTag()
+                                /(double)postRepository.countByModerationStatus(ModerationStatus.ACCEPTED))
+                        *((double)tag2PostRepository.getAmountOfTagByTagId(tag.getId())
+                                /(double)postRepository.countByModerationStatus(ModerationStatus.ACCEPTED))
+        );
     }
 
-    private void getQueryCheck (String query, StringBuilder errors) {
-        if (!query.equals("")) {
-        List<Tag> tags = tagsRepository.getAllTags();
-        int count = 0;
-        for (Tag tag : tags) {
-            if (query.equals(tag.getName())) {
-                count++;
-            }
-        }
-        if (count == 0) {
-            errors.append("Tag ").append(query).append(" is not found.");
-        } }
-    }
 }

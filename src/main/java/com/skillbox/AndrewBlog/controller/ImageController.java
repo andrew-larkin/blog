@@ -22,10 +22,9 @@ public class ImageController {
     }
 
     //@Secured("USER")
-    @PostMapping("/image")
-    public ResponseEntity<?> uploadFile(@RequestParam("type") String type,
-                                        @RequestParam(name = "file", required = false) MultipartFile file) {
-        return imageService.getUpload(type, file);
+    @PostMapping(value = "/image", consumes = "multipart/form-data")
+    public ResponseEntity<?> postApiImage(@RequestParam(name = "image") MultipartFile image) throws Exception {
+        return imageService.getUploadImageForPost(image);
     }
 }
 

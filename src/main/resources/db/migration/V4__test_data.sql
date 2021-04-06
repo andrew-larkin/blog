@@ -30,7 +30,7 @@ VALUES (1, "ACCEPTED", 1, 3, "2021-01-15' '19:57", "Rolling Back Migrations with
 INSERT INTO `tag2post` (`id`, `post_id`, `tag_id`)
 VALUES (1, 1, 2);
 INSERT INTO `tag2post` (`post_id`, `tag_id`)
-VALUES (2, 3), (3, 1);
+VALUES (2, 3), (3, 1), (1, 1);
 
 INSERT INTO `post_votes` (`id`, `user_id`, `post_id`, `time`, `value`)
 VALUES (1, 2, 1, "2021-01-15' '19:45", 1);

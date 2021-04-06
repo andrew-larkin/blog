@@ -16,5 +16,7 @@ public interface CaptchaRepository extends JpaRepository<CaptchaCode, Integer> {
 
     List<CaptchaCode> findByTimeBefore(Date time);
 
-    Optional<CaptchaCode> findSecretCodeByCode(String code);
+
+    @Query(name = "select * from captcha_codes where code = :code")
+    Optional<CaptchaCode> getSecretCodeByCode(@Param(value = "code") String code);
 }

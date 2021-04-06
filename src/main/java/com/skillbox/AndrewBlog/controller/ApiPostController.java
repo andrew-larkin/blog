@@ -67,7 +67,7 @@ public class ApiPostController {
 	}
 
 	@GetMapping("/api/post/{id}")
-	private ResponseEntity<?> getApiPostId(@PathVariable int id) {
+	private ResponseEntity<?> getApiPostId(@PathVariable int id) throws NoSuchFieldException {
 		return postService.getApiPostId(id);
 	}
 
@@ -105,8 +105,8 @@ public class ApiPostController {
 
 	//@Secured(USER)
 	@PostMapping("/api/post/dislike")
-	private ResponseEntity<?> postApiPostDislike(@RequestParam int postId) {
-		return postService.postApiPostDislike(postId);
+	private ResponseEntity<?> postApiPostDislike(@RequestBody LikeRequest likeRequest) {
+		return postService.postApiPostDislike(likeRequest);
 	}
 
 }

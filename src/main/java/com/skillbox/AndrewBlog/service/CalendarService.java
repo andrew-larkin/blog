@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -24,11 +25,30 @@ public class CalendarService {
         this.postRepository = postRepository;
     }
 
-    public ResponseEntity<?> getApiCalendar(Integer year) {
+    public ResponseEntity<?> getApiCalendarWithYear(int year) {
 
         Map<String, Integer> posts = new TreeMap<>();
 
-        if (year == null) {
+            List<Integer> years = new ArrayList<>();
+            years.add(year);
+
+            List<String> dates = postRepository.getDatesWithActivePostsByYear(year).stream()
+                    .sorted()
+                    .collect(Collectors.toList());
+            for (String date : dates) {
+                posts.put(date, postRepository.getAmountOfPostsByDate(date));
+            }
+
+            return ResponseEntity.status(HttpStatus.OK).body(new YearsPostsResponse(
+                    years,
+                    posts
+            ));
+    }
+
+    public ResponseEntity<?> getApiCalendarAllYears() {
+
+        Map<String, Integer> posts = new TreeMap<>();
+
             List<Integer> years = postRepository.getYearsWithActivePosts().stream()
                     .sorted()
                     .collect(Collectors.toList());
@@ -44,13 +64,6 @@ public class CalendarService {
                     years,
                     posts
             ));
-
-        }
-        return ResponseEntity.status(HttpStatus.OK).body(new YearsPostsResponse(
-                getYears(year),
-                getPosts(year)
-        ));
-
     }
 
     private List<Integer> getYears(Integer year) {

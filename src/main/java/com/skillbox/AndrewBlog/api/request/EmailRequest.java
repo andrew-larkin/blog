@@ -4,8 +4,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class EmailRequest {
 
-    @JsonProperty(value = "email")
+    @JsonProperty("email")
     private String email;
+
+    public EmailRequest() {
+    }
 
     public EmailRequest(String email) {
         this.email = email;

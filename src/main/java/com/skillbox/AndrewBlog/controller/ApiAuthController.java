@@ -46,7 +46,7 @@ public class ApiAuthController {
     }
 
     @PostMapping("/restore")
-    private ResponseEntity<?> postApiAuthRestore(@RequestParam(value = "email") String email) {
+    private ResponseEntity<?> postApiAuthRestore(@RequestBody EmailRequest email) {
         return authService.postApiAuthRestore(email);
     }
 

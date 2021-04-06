@@ -36,14 +36,12 @@ public class StatisticService {
 
     public ResponseEntity<?> getApiStatisticsAll() {
 
-        User user = userRepository.getUserByEmail(personDetailsService.getCurrentUser()
-                .getEmail()).orElseThrow(() ->
-                new UsernameNotFoundException(String.format("user with email %s not found",
-                        personDetailsService.getCurrentUser().getEmail()))
-        );
+        User user = getCurrentUser();
 
-        if (user.getIsModerator() != LIKE || !settingsRepository.findById(3).get().getValue().equals("YES")) {
-            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body("You are not moderator, man");
+        if (user.getIsModerator() != LIKE || !settingsRepository.findById(3).get()
+                .getValue().toLowerCase().equals("YES")) {
+            return ResponseEntity.status(HttpStatus.NON_AUTHORITATIVE_INFORMATION)
+                    .body("You are not moderator, man");
         } else {
             return ResponseEntity.status(HttpStatus.OK).body(new StatisticResponse(
                     postRepository.getAmountOfPosts(),
@@ -57,11 +55,7 @@ public class StatisticService {
 
     public ResponseEntity<?> getApiStatisticsMy() {
 
-        User user = userRepository.getUserByEmail(personDetailsService.getCurrentUser()
-                .getEmail()).orElseThrow(() ->
-                new UsernameNotFoundException(String.format("user with email %s not found",
-                        personDetailsService.getCurrentUser().getEmail()))
-        );
+        User user = getCurrentUser();
 
         return ResponseEntity.status(HttpStatus.OK).body(new StatisticResponse(
                 postRepository.countByUserId(user.getId()),
@@ -71,5 +65,13 @@ public class StatisticService {
                 postRepository.getMyDateOfFirstPublication(user.getId()).getTime()/1000
         ));
 
+    }
+
+    private User getCurrentUser() {
+        return userRepository.getUserByEmail(personDetailsService.getCurrentUser()
+                .getEmail()).orElseThrow(() ->
+                new UsernameNotFoundException(String.format("user with email %s not found",
+                        personDetailsService.getCurrentUser().getEmail()))
+        );
     }
 }

@@ -30,10 +30,12 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
     List<Post> bestPost(Pageable pageable);
 
     @Query(value = "SELECT posts.id, posts.is_active, posts.moderation_status, posts.moderator_id, " +
-            "posts.text, posts.time, posts.title, posts.user_id, posts.view_count FROM posts, post_comments " +
+            "posts.text, posts.time, posts.title, posts.user_id, posts.view_count " +
+            "FROM posts left join post_comments " +
+            "on posts.id = post_comments.post_id " +
             "where posts.is_active=1 and posts.moderation_status='ACCEPTED' " +
             "and posts.time<now() group by posts.id " +
-            "order by count(post_comments.user_id)", nativeQuery = true)
+            "order by count(post_comments.user_id) desc", nativeQuery = true)
     List<Post> popularPost(Pageable pageable);
 
     @Query(value = "select * from posts where posts.is_active=1 and posts.moderation_status='ACCEPTED' " +
@@ -64,9 +66,6 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
             "and posts.time<now() GROUP BY posts.id", nativeQuery = true)
     List<Post> getPostsByTag(@Param("tag") String tag, Pageable pageable);
 
-   /* int countByTitleAndIsActiveAndModerationStatusAndBetweenAndTimeIsBefore(byte isActive,
-                   ModerationStatus moderationStatus, Date dateFrom, Date dateTo, Date now);
-*/
     @Query(value = "select year(posts.time) from posts " +
             "where posts.is_active=1 and posts.moderation_status='ACCEPTED' " +
             "and posts.time<now() group by year(posts.time)", nativeQuery = true)
@@ -96,12 +95,17 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
     Date getDateOfFirstPublication();
 
     @Query(value = "select year(time) from posts where is_active = 1 and " +
-            "moderation_status = 'ACCEPTED' and time <= now() group by year(time) desc", nativeQuery = true)
+            "moderation_status = 'ACCEPTED' and time <= now() group by year(time)", nativeQuery = true)
     Optional<Integer> getYearsWithActivePosts();
 
     @Query(value = "select date(time) from posts where is_active = 1 and " +
             "moderation_status = 'ACCEPTED' and date(time) <= now() group by date(time)", nativeQuery = true)
     List<String> getDatesWithActivePosts();
+
+    @Query(value = "select date(time) from posts where is_active = 1 and " +
+            "moderation_status = 'ACCEPTED' and date(time) <= now() and " +
+            "year(time) = :time group by date(time)", nativeQuery = true)
+    List<String> getDatesWithActivePostsByYear(@Param("time") int year);
 
     @Query(value = "select count(*) from posts where is_active = 1 and " +
             "moderation_status = 'ACCEPTED' and date(time) = :time", nativeQuery = true)
@@ -150,4 +154,8 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
     @Query(value = "select * from posts where moderation_status = 'ACCEPTED' " +
             "and is_active = 1 and moderator_id = :moderator_id", nativeQuery = true)
     List<Post> moderationAcceptedPosts(@Param("moderator_id") int moderator_id, Pageable pageable);
+
+    @Query(value = "select count(*) from posts where moderation_status = 'ACCEPTED' " +
+            "and is_active = 1", nativeQuery = true)
+    int countByModerationStatus(ModerationStatus accepted);
 }

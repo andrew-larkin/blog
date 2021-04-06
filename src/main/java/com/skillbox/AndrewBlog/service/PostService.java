@@ -13,6 +13,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
@@ -32,12 +34,13 @@ public class PostService {
     private Tag2PostRepository tag2PostRepository;
     private TagsRepository tagsRepository;
     private PersonDetailsService personDetailsService;
+    private SettingsRepository settingsRepository;
 
     @Autowired
     public PostService(PostRepository postRepository, PostVoteRepository postVoteRepository,
                        PostCommentRepository postCommentRepository, UserRepository userRepository,
                        Tag2PostRepository tag2PostRepository, TagsRepository tagsRepository,
-                       PersonDetailsService personDetailsService) {
+                       PersonDetailsService personDetailsService, SettingsRepository settingsRepository) {
         this.postRepository = postRepository;
         this.postVoteRepository = postVoteRepository;
         this.postCommentRepository = postCommentRepository;
@@ -45,6 +48,7 @@ public class PostService {
         this.tag2PostRepository = tag2PostRepository;
         this.tagsRepository = tagsRepository;
         this.personDetailsService = personDetailsService;
+        this.settingsRepository = settingsRepository;
     }
 
     public ResponseEntity<?> getApiPosts(int offset, int limit, String mode) {
@@ -160,9 +164,7 @@ public class PostService {
         if (limit <= 0) {
             errors.append("'limit' should be equal or greater than 0. ");
         }
-        if (tagsRepository.getTagByName(tag).isEmpty()) {
-            errors.append("defined 'tag' is not found. ");
-        }
+
         if (!errors.toString().equals("")) {
             return ResponseEntity.status(200).body(new ErrorDescriptionResponse(errors.toString().trim()));
         }
@@ -176,6 +178,16 @@ public class PostService {
 
     public ResponseEntity<?> getApiPostModeration(int offset, int limit, String status) {
 
+        User user = userRepository.getUserByEmail(personDetailsService.getCurrentUser()
+                .getEmail()).orElseThrow(() ->
+                new UsernameNotFoundException(String.format("user with email %s not found",
+                        personDetailsService.getCurrentUser().getEmail()))
+        );
+
+        if (user.getIsModerator() != isActive) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(false);
+        }
+
         StringBuilder errors = new StringBuilder();
         if (offset < 0) {
             errors.append("'offset' should be equal or greater than 0. ");
@@ -185,15 +197,6 @@ public class PostService {
         }
         if (!errors.toString().equals("")) {
             return ResponseEntity.status(200).body(new ErrorDescriptionResponse(errors.toString().trim()));
-        }
-        User user = userRepository.getUserByEmail(personDetailsService.getCurrentUser()
-                .getEmail()).orElseThrow(() ->
-                new UsernameNotFoundException(String.format("user with email %s not found",
-                        personDetailsService.getCurrentUser().getEmail()))
-        );
-
-        if (user.getIsModerator() != isActive) {
-            return ResponseEntity.status(403).body("");
         }
 
         Pageable pageable = PageRequest.of(offset, limit);
@@ -265,49 +268,47 @@ public class PostService {
         ));
     }
 
-        public ResponseEntity<?> getApiPostId(int id) {
+        public ResponseEntity<?> getApiPostId(int id) throws NoSuchFieldException {
 
-        Optional<Post> optionalPost = postRepository.getPostById(id);
+        Post post = postRepository.findById(id).orElseThrow(() ->
+                new NoSuchFieldException("post with such 'id' is not found")
+        );
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
-        if (optionalPost.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("Post with id '" + id + "' is not found.");
+        int userId;
+        if (auth.getPrincipal().toString().equals("anonymousUser")) {
+            userId = 0;
+        } else {
+            userId = personDetailsService.getCurrentUser().getId();
         }
 
-        //после наладки авторизации добавить логику для автора и модератора
-        int moderatorId = 1456;
-        int userId = 1456;
-        if (!(optionalPost.get().getModeratorId() == moderatorId)
-                || !(optionalPost.get().getUser().getId() == userId)) {
-            int viewCount = optionalPost.get().getViewCount();
-            viewCount++;
-            optionalPost.get().setViewCount(viewCount);
-            postRepository.saveAndFlush(optionalPost.get());
+        if (post.getModeratorId() != userId) {
+            if (post.getUser().getId() != userId) {
+                int viewCount = post.getViewCount();
+                viewCount++;
+                post.setViewCount(viewCount);
+                postRepository.saveAndFlush(post);
+            }
         }
 
         return ResponseEntity.status(HttpStatus.OK).body(new PostSingleEntityResponse(
-                optionalPost.get().getId(),
-                optionalPost.get().getTime().getTime()/1000,
+                post.getId(),
+                post.getTime().getTime()/1000,
                 true,
-                getIdNameResponseByPost(optionalPost.get()),
-                optionalPost.get().getTitle(),
-                optionalPost.get().getText(),
-                postVoteRepository.getLikeCountByPostId(optionalPost.get().getId()),
-                postVoteRepository.getDislikeCountByPostId(optionalPost.get().getId()),
-                optionalPost.get().getViewCount(),
-                getComments(optionalPost.get()),
-                getTagsByPost(optionalPost.get())
+                getIdNameResponseByPost(post),
+                post.getTitle(),
+                post.getText(),
+                postVoteRepository.getLikeCountByPostId(post.getId()),
+                postVoteRepository.getDislikeCountByPostId(post.getId()),
+                post.getViewCount(),
+                getComments(post),
+                getTagsByPost(post)
         ));
     }
 
     public ResponseEntity<?> postApiPost(PostRequest postRequest) {
 
-        User user = userRepository.getUserByEmail(personDetailsService.getCurrentUser()
-                .getEmail()).orElseThrow(() ->
-                        new UsernameNotFoundException(String.format("user with email %s not found",
-                                personDetailsService.getCurrentUser().getEmail()))
-        );
-
+        User user = getCurrentUser();
         Map<String, String> errors = new HashMap<>();
         if (postRequest.getTitle().length() < 3) {
             errors.put("title: ", "title of the post can not be empty and should contain more then 3 symbols ");
@@ -326,8 +327,8 @@ public class PostService {
         }
 
         Post post = new Post(
-            isActive,
-            user.getIsModerator() == isActive ? ModerationStatus.ACCEPTED : ModerationStatus.NEW,
+            (byte) postRequest.getActive(),
+            setModerationStatus(user, (byte) postRequest.getActive()),
             user.getIsModerator() == isActive ? user.getId() : 0,
             user,
             postRequest.getTimestamp() < System.currentTimeMillis() ? new Date(System.currentTimeMillis())
@@ -474,7 +475,7 @@ public class PostService {
         Post post = postRepository.findById(moderationRequest.getPostId()).get();
         post.setModeratorId(user.getId());
         post.setModerationStatus(
-                moderationRequest.getDecision().equals("accept")
+                moderationRequest.getDecision().toLowerCase().equals("accept")
                         ? ModerationStatus.ACCEPTED : ModerationStatus.DECLINED);
 
         postRepository.save(post);
@@ -487,23 +488,20 @@ public class PostService {
     public ResponseEntity<?> postApiPostLike(LikeRequest likeRequest) {
 
         final byte LIKE = 1;
-
-        User user = userRepository.getUserByEmail(personDetailsService.getCurrentUser()
-                .getEmail()).orElseThrow(() ->
-                new UsernameNotFoundException(String.format("user with email %s not found",
-                        personDetailsService.getCurrentUser().getEmail()))
-        );
+        User user = getCurrentUser();
 
         if (postVoteRepository.findByPostIdAndUserId(likeRequest.getPostId(), user.getId()).isEmpty()) {
             postVoteRepository.save(new PostVote(
-                    user.getId(),
-                    likeRequest.getPostId(),
                     new Date(System.currentTimeMillis()),
-                    LIKE
+                    LIKE,
+                    user,
+                    postRepository.findById(likeRequest.getPostId()).get()
             ));
             return ResponseEntity.status(200).body(new ResultResponse(true));
-        } else if (postVoteRepository.findByPostIdAndUserId(likeRequest.getPostId(), user.getId()).get().getValue() != LIKE) {
-            PostVote changePostVote = postVoteRepository.findByPostIdAndUserId(likeRequest.getPostId(), user.getId()).get();
+        } else if (postVoteRepository.findByPostIdAndUserId(likeRequest.getPostId(),
+                user.getId()).get().getValue() != LIKE) {
+            PostVote changePostVote = postVoteRepository
+                    .findByPostIdAndUserId(likeRequest.getPostId(), user.getId()).get();
             changePostVote.setValue(LIKE);
             postVoteRepository.save(changePostVote);
             return ResponseEntity.status(200).body(new ResultResponse(true));
@@ -512,8 +510,20 @@ public class PostService {
 
     }
 
-    public ResponseEntity<?> postApiPostDislike(int postId) {
-        return ResponseEntity.status(200).body("заглушка");
+    public ResponseEntity<?> postApiPostDislike(LikeRequest likeRequest) {
+
+        final byte DISLIKE = -1;
+        User user = getCurrentUser();
+        if (postVoteRepository.findByPostIdAndUserId(likeRequest.getPostId(), user.getId()).isEmpty()) {
+            postVoteRepository.save(new PostVote(
+                    new Date(System.currentTimeMillis()),
+                    DISLIKE,
+                    user,
+                    postRepository.findById(likeRequest.getPostId()).get()
+            ));
+            return ResponseEntity.status(200).body(new ResultResponse(true));
+        }
+        return ResponseEntity.status(200).body(new ResultResponse(false));
     }
 
     private List<PostEntityResponse> getPostResponseListByPosts(List<Post> postList) {
@@ -586,6 +596,33 @@ public class PostService {
         } else {
             return stringBuilder.append(post.getText().substring(0, 149)).append("...").toString();
         }
+    }
+
+    private User getCurrentUser() {
+        return userRepository.getUserByEmail(personDetailsService.getCurrentUser()
+                .getEmail()).orElseThrow(() ->
+                new UsernameNotFoundException(String.format("user with email %s not found",
+                        personDetailsService.getCurrentUser().getEmail()))
+        );
+    }
+
+    private boolean isPreModerationOn() {
+        return settingsRepository.findById(2).get().getValue().toLowerCase().equals("yes");
+    }
+
+    private ModerationStatus setModerationStatus(User user, byte active) {
+
+        if (isPreModerationOn()) {
+            if (isActive != user.getIsModerator()) {
+                return ModerationStatus.NEW;
+            } else {
+                return ModerationStatus.ACCEPTED;
+            }
+        } else if (active == isActive) {
+            return ModerationStatus.ACCEPTED;
+        }
+
+        return ModerationStatus.NEW;
     }
 
 }

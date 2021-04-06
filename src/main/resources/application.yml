@@ -6,6 +6,8 @@ blog:
   copyright: "Андрей Ларионов"
   copyrightFrom: "2019"
 
+location:
+  host: "http://localhost:8080/"
 
 management:
   endpoints:
@@ -26,12 +28,9 @@ spring:
     username: "root"
     password: ""
     driver-class-name: "com.mysql.cj.jdbc.Driver"
-  mail:
-    host: "smtp.yandex.ru"
-    username: "uw@dru.su"
-    password: "12345678"
-    port: "465"
-    protocol: "smtps"
+
+
+
 
 mail:
     debug: "true"
@@ -46,3 +45,7 @@ cloudinary:
 upload:
   file:
     types: png,jpg,jpeg
+
+administrator:
+  email: "blin72305@gmail.com"
+  password: "967ST5oQWj11"
