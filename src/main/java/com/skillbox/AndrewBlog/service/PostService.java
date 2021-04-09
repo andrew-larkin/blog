@@ -20,7 +20,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class PostService {
@@ -101,7 +100,6 @@ public class PostService {
         if (!errors.toString().equals("")) {
             return ResponseEntity.status(200).body(new ErrorDescriptionResponse(errors.toString().trim()));
         }
-
         if (query.equals("")) {
             getApiPosts(offset, limit, "recent");
         }
@@ -110,7 +108,7 @@ public class PostService {
           .findByTextContainingAllIgnoreCaseAndIsActiveIsGreaterThanEqualAndModerationStatusEqualsAndTimeBefore(query,
                   isActive, "ACCEPTED", new Date(System.currentTimeMillis()), PageRequest.of(offset, limit));
 
-        if(postList.isEmpty()) {
+        if (postList.isEmpty()) {
             List<PostEntityResponse> emptyList = new ArrayList<>();
             return ResponseEntity.status(200).body(new CountPostsResponse(
                     postList.size(),
@@ -164,7 +162,6 @@ public class PostService {
         if (limit <= 0) {
             errors.append("'limit' should be equal or greater than 0. ");
         }
-
         if (!errors.toString().equals("")) {
             return ResponseEntity.status(200).body(new ErrorDescriptionResponse(errors.toString().trim()));
         }
@@ -236,12 +233,7 @@ public class PostService {
             return ResponseEntity.status(200).body(new ErrorDescriptionResponse(errors.toString().trim()));
         }
 
-        User user = userRepository.getUserByEmail(personDetailsService.getCurrentUser()
-                .getEmail()).orElseThrow(() ->
-                new UsernameNotFoundException(String.format("user with email %s not found",
-                        personDetailsService.getCurrentUser().getEmail()))
-        );
-
+        User user = getCurrentUser();
         Pageable pageable = PageRequest.of(offset, limit);
 
         List<Post> postList;
@@ -339,30 +331,14 @@ public class PostService {
         );
 
         Post newPost = postRepository.save(post);
-
-        for (int i = 0; i < postRequest.getTags().size(); i++) {
-            if (tagsRepository.getTagByName(postRequest.getTags().get(i)).isEmpty()) {
-                Tag newTag = tagsRepository.save(new Tag(postRequest.getTags().get(i)));
-                tag2PostRepository.save(new Tag2Post(newPost,
-                        newTag));
-            } else {
-                Tag existedTag = tagsRepository.getTagByName(postRequest.getTags().get(i)).get(0);
-                tag2PostRepository.save(new Tag2Post(newPost,
-                        existedTag));
-            }
-        }
-
+        manageTags(postRequest.getTags(), newPost.getId());
         return ResponseEntity.status(200).body(new ResultResponse(
                 true
         ));
     }
 
     public ResponseEntity<?> putApiPost(int id, PostRequest postRequest) {
-        User user = userRepository.getUserByEmail(personDetailsService.getCurrentUser()
-                .getEmail()).orElseThrow(() ->
-                new UsernameNotFoundException(String.format("user with email %s not found",
-                        personDetailsService.getCurrentUser().getEmail()))
-        );
+        User user = getCurrentUser();
 
         Map<String, String> errors = new HashMap<>();
         if (postRequest.getTitle().length() < 3) {
@@ -374,14 +350,11 @@ public class PostService {
         if (postRepository.findById(id).isEmpty()) {
             errors.put("post: ", "post is not found ");
         }
-
         if (postRepository.findById(id).get().getUser().getId() != user.getId()) {
             if (userRepository.findByEmail(user.getEmail()).get().getIsModerator() != isActive) {
                 errors.put("user: ", "you do not have the rights to update this post ");
         }
-
         }
-
         if (errors.size() != 0) {
             return ResponseEntity.status(200).body(new ResultErrorsResponse(
                     false,
@@ -400,19 +373,8 @@ public class PostService {
         postToUpdate.setTitle(postRequest.getTitle());
         postToUpdate.setText(postRequest.getText());
 
-        postRepository.save(postToUpdate);
-
-        Set<String> oldTags = tag2PostRepository.findByPostId(id).stream()
-                .map(n -> n.getTag().getName())
-                .collect(Collectors.toSet());
-
-        for (int i = 0; i < postRequest.getTags().size(); i++) {
-            if (!oldTags.contains(postRequest.getTags().get(i))) {
-                Tag existedTag = tagsRepository.getTagByName(postRequest.getTags().get(i)).get(0);
-                tag2PostRepository.save(new Tag2Post(postToUpdate,
-                        existedTag));
-            }
-        }
+        Post updatedPost = postRepository.save(postToUpdate);
+        manageTags(postRequest.getTags(), id);
 
         return ResponseEntity.status(200).body(new ResultResponse(
                 true
@@ -421,11 +383,7 @@ public class PostService {
 
     public ResponseEntity<?> postApiComment(CommentRequest commentRequest) {
 
-        User user = userRepository.getUserByEmail(personDetailsService.getCurrentUser()
-                .getEmail()).orElseThrow(() ->
-                new UsernameNotFoundException(String.format("user with email %s not found",
-                        personDetailsService.getCurrentUser().getEmail()))
-        );
+        User user = getCurrentUser();
 
         Map<String, String> errors = new HashMap<>();
         if (commentRequest.getParentId() != 0) {
@@ -462,12 +420,7 @@ public class PostService {
 
     public ResponseEntity<?> postApiModeration(ModerationRequest moderationRequest) {
 
-        User user = userRepository.getUserByEmail(personDetailsService.getCurrentUser()
-                .getEmail()).orElseThrow(() ->
-                new UsernameNotFoundException(String.format("user with email %s not found",
-                        personDetailsService.getCurrentUser().getEmail()))
-        );
-
+        User user = getCurrentUser();
         if (user.getIsModerator() != isActive) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(false);
         }
@@ -549,9 +502,8 @@ public class PostService {
     }
 
     private IdNameResponse getIdNameResponseByPost(Post post) {
-        IdNameResponse user = new IdNameResponse(post.getUser().getId(),
+        return new IdNameResponse(post.getUser().getId(),
                 post.getUser().getName());
-        return user;
     }
 
     private List<CommentEntityResponse> getComments(Post post) {
@@ -607,7 +559,7 @@ public class PostService {
     }
 
     private boolean isPreModerationOn() {
-        return settingsRepository.findById(2).get().getValue().toLowerCase().equals("yes");
+        return settingsRepository.findById(2).orElseThrow().getValue().toLowerCase().equals("yes");
     }
 
     private ModerationStatus setModerationStatus(User user, byte active) {
@@ -625,4 +577,21 @@ public class PostService {
         return ModerationStatus.NEW;
     }
 
+    private void manageTags(List<String> tags, int postId) {
+
+        for (String tag : tags) {
+            Tag newTag;
+            if (tagsRepository.findByName(tag).isEmpty()) {
+                newTag = tagsRepository.save(new Tag(tag));
+            } else {
+                newTag = tagsRepository.findByName(tag).get();
+            }
+            if (tag2PostRepository.findByPostIdAndTagId(postId, newTag.getId()).isEmpty()) {
+                tag2PostRepository.save(new Tag2Post(
+                        postRepository.findById(postId).orElseThrow(),
+                        newTag
+                ));
+            }
+        }
+    }
 }

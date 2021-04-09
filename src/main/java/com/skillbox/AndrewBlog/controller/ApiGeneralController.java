@@ -49,14 +49,9 @@ public class ApiGeneralController {
         return tagsService.getApiTag(query);
     }
 
-    @GetMapping(value = "/calendar", consumes = "application/json")
-    private ResponseEntity<?> getApiCalendar(@RequestParam int year) {
-        return calendarService.getApiCalendarWithYear(year);
-    }
-
     @GetMapping("/calendar")
-    private ResponseEntity<?> getApiCalendar() {
-        return calendarService.getApiCalendarAllYears();
+    private ResponseEntity<?> getApiCalendar(@RequestParam(required = false) int year) {
+        return calendarService.getApiCalendar(year);
     }
 
     @GetMapping("/statistics/all")

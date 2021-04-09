@@ -16,9 +16,6 @@ import org.springframework.stereotype.Service;
 @Service
 public class StatisticService {
 
-    final byte LIKE = 1;
-    final byte DISLIKE = -1;
-
     private final SettingsRepository settingsRepository;
     private final PostRepository postRepository;
     private final PostVoteRepository postVoteRepository;
@@ -26,7 +23,7 @@ public class StatisticService {
     private final PersonDetailsService personDetailsService;
 
     @Autowired
-    public StatisticService(SettingsRepository settingsRepository, PostRepository postRepository, PostVoteRepository postVoteRepository, UserRepository userRepository, PersonDetailsService personDetailsService) {
+    StatisticService(SettingsRepository settingsRepository, PostRepository postRepository, PostVoteRepository postVoteRepository, UserRepository userRepository, PersonDetailsService personDetailsService) {
         this.settingsRepository = settingsRepository;
         this.postRepository = postRepository;
         this.postVoteRepository = postVoteRepository;
@@ -37,11 +34,12 @@ public class StatisticService {
     public ResponseEntity<?> getApiStatisticsAll() {
 
         User user = getCurrentUser();
+        byte isModerator = 1;
 
-        if (user.getIsModerator() != LIKE || !settingsRepository.findById(3).get()
+        if (user.getIsModerator() != isModerator || !settingsRepository.findById(3).orElseThrow()
                 .getValue().toLowerCase().equals("YES")) {
             return ResponseEntity.status(HttpStatus.NON_AUTHORITATIVE_INFORMATION)
-                    .body("You are not moderator, man");
+                    .body("You don't have moderator's rights");
         } else {
             return ResponseEntity.status(HttpStatus.OK).body(new StatisticResponse(
                     postRepository.getAmountOfPosts(),
@@ -56,6 +54,8 @@ public class StatisticService {
     public ResponseEntity<?> getApiStatisticsMy() {
 
         User user = getCurrentUser();
+        final byte LIKE = 1;
+        final byte DISLIKE = -1;
 
         return ResponseEntity.status(HttpStatus.OK).body(new StatisticResponse(
                 postRepository.countByUserId(user.getId()),

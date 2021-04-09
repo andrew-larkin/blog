@@ -1,6 +1,5 @@
 package com.skillbox.AndrewBlog.service;
 
-import com.skillbox.AndrewBlog.api.response.ErrorDescriptionResponse;
 import com.skillbox.AndrewBlog.api.response.NameWeightResponse;
 import com.skillbox.AndrewBlog.api.response.TagsResponse;
 import com.skillbox.AndrewBlog.model.ModerationStatus;
@@ -13,10 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class TagsService {

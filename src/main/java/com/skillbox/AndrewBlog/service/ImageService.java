@@ -2,7 +2,6 @@ package com.skillbox.AndrewBlog.service;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
-import com.skillbox.AndrewBlog.api.response.ResultErrorsResponse;
 import com.skillbox.AndrewBlog.model.User;
 import com.skillbox.AndrewBlog.repository.UserRepository;
 import com.skillbox.AndrewBlog.security.PersonDetailsService;
@@ -61,7 +60,7 @@ public class ImageService {
                         .body(imageAddress);
     }
 
-    private void validateFile(MultipartFile file) throws Exception{
+    private void validateFile(MultipartFile file) {
 
         String contType = file.getContentType();
 

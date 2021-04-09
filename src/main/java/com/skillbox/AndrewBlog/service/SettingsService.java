@@ -12,7 +12,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,9 +19,8 @@ import java.util.List;
 @Service
 public class SettingsService {
 
-    final int isModerator = 1;
-    final String YES = "YES";
-    final String NO = "NO";
+    private final String YES = "YES";
+    private final String NO = "NO";
 
     private final SettingsRepository settingsRepository;
     private final UserRepository userRepository;
@@ -38,9 +36,9 @@ public class SettingsService {
     public ResponseEntity<?> getApiSettings () {
 
         return ResponseEntity.status(HttpStatus.OK).body(new SettingsResponse(
-                settingsRepository.findById(1).get().getValue().equals("YES"),
-                settingsRepository.findById(2).get().getValue().equals("YES"),
-                settingsRepository.findById(3).get().getValue().equals("YES")
+                settingsRepository.findById(1).orElseThrow().getValue().equals(YES),
+                settingsRepository.findById(2).orElseThrow().getValue().equals(YES),
+                settingsRepository.findById(3).orElseThrow().getValue().equals(YES)
         ));
     }
 
@@ -52,6 +50,7 @@ public class SettingsService {
                         personDetailsService.getCurrentUser().getEmail()))
         );
 
+        final byte isModerator = 1;
         if (user.getIsModerator() != isModerator) {
             throw new RuntimeException("You are not a moderator!");
         }
@@ -62,7 +61,7 @@ public class SettingsService {
         globalSettings.add(settingsRequest.isSTATISTICS_IS_PUBLIC());
 
          for (int i = 1; i <= 3; i++) {
-             GlobalSettings settings = settingsRepository.findById(i).get();
+             GlobalSettings settings = settingsRepository.findById(i).orElseThrow();
              settings.setValue(globalSettings.get(i-1) ? YES : NO);
              settingsRepository.save(settings);
          }

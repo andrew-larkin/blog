@@ -1,13 +1,10 @@
 package com.skillbox.AndrewBlog.repository;
 
-import com.skillbox.AndrewBlog.model.CaptchaCode;
 import com.skillbox.AndrewBlog.model.ModerationStatus;
 import com.skillbox.AndrewBlog.model.Post;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
@@ -76,16 +73,6 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
             "and posts.time<now() group by date(time) order by date(time)", nativeQuery = true)
     List<Date> getDates();
 
-    @Query(value = "SELECT count(date(time)) from posts " +
-            "where date(time) = date(:time) and posts.is_active=1 and posts.moderation_status='ACCEPTED' " +
-            "and posts.time<now() group by date(time)", nativeQuery = true)
-    Integer getDatesCount(@Param("time") Date date);
-
-    @Query(value = "SELECT date(time) from posts where year(time) = :time " +
-            "and posts.is_active=1 and posts.moderation_status='ACCEPTED' " +
-            "and posts.time<now() group by date(time) order by date(time)", nativeQuery = true)
-    List<Date> getDatesByYear(@Param("time") String year);
-
     Integer countIdByModerationStatus(ModerationStatus moderationStatus);
 
     @Query(value = "select sum(view_count) from posts", nativeQuery = true)
@@ -94,18 +81,9 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
     @Query(value = "select time from posts order by id limit 1", nativeQuery = true)
     Date getDateOfFirstPublication();
 
-    @Query(value = "select year(time) from posts where is_active = 1 and " +
-            "moderation_status = 'ACCEPTED' and time <= now() group by year(time)", nativeQuery = true)
-    Optional<Integer> getYearsWithActivePosts();
-
     @Query(value = "select date(time) from posts where is_active = 1 and " +
             "moderation_status = 'ACCEPTED' and date(time) <= now() group by date(time)", nativeQuery = true)
     List<String> getDatesWithActivePosts();
-
-    @Query(value = "select date(time) from posts where is_active = 1 and " +
-            "moderation_status = 'ACCEPTED' and date(time) <= now() and " +
-            "year(time) = :time group by date(time)", nativeQuery = true)
-    List<String> getDatesWithActivePostsByYear(@Param("time") int year);
 
     @Query(value = "select count(*) from posts where is_active = 1 and " +
             "moderation_status = 'ACCEPTED' and date(time) = :time", nativeQuery = true)

@@ -1,6 +1,5 @@
 package com.skillbox.AndrewBlog.repository;
 
-import com.skillbox.AndrewBlog.model.Tag;
 import com.skillbox.AndrewBlog.model.Tag2Post;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
@@ -8,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface Tag2PostRepository extends CrudRepository<Tag2Post, Integer> {
@@ -27,4 +27,6 @@ public interface Tag2PostRepository extends CrudRepository<Tag2Post, Integer> {
             "where tags.id = tag2post.tag_id " +
             "group by tags.id", nativeQuery = true)
     List<String> getUsableTags();
+
+    Optional<Tag2Post> findByPostIdAndTagId(int postId, int tagId);
 }
